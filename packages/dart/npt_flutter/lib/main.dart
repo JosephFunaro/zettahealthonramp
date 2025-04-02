@@ -8,7 +8,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   var windowOptions = const WindowOptions(
-    title: "NoPorts Desktop",
+    title: "ZettaHealth OnRamp",
     minimumSize: Constants.kWindowsMinWindowSize,
     skipTaskbar: false,
   );

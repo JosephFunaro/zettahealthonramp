@@ -11,7 +11,8 @@ class SettingsLanguageSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<SettingsBloc, SettingsState, Language?>(selector: (state) {
+    return BlocSelector<SettingsBloc, SettingsState, Language?>(
+        selector: (state) {
       if (state is SettingsLoadedState) {
         return state.settings.language;
       }
@@ -30,7 +31,7 @@ class SettingsLanguageSelector extends StatelessWidget {
                     .map<DropdownMenuEntry<Language>>(
                       (Language l) => DropdownMenuEntry(
                         value: l,
-                        label: l.displayName,
+                        label: "English", //l.displayName,
                       ),
                     )
                     .toList(),
@@ -38,7 +39,9 @@ class SettingsLanguageSelector extends StatelessWidget {
                   if (value == null) return;
                   var bloc = context.read<SettingsBloc>();
                   bloc.add(SettingsEditEvent(
-                    settings: (bloc.state as SettingsLoadedState).settings.copyWith(language: value),
+                    settings: (bloc.state as SettingsLoadedState)
+                        .settings
+                        .copyWith(language: value),
                     save: true,
                   ));
                 },

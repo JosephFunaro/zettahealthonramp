@@ -29,8 +29,8 @@ const _$PreferredViewLayoutEnumMap = {
 
 const _$LanguageEnumMap = {
   Language.english: 'en',
-  Language.spanish: 'es',
+  /*Language.spanish: 'es',
   Language.portuguese: 'pt-br',
   Language.mandarin: 'zh-hans-cn',
-  Language.cantonese: 'zh-hant-hk',
+  Language.cantonese: 'zh-hant-hk',*/
 };
