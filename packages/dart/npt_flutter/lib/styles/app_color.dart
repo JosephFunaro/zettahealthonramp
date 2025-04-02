@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class AppColor {
   static const primaryColor = Color(0xFF0E4370);
-  static const surfaceColor = Color(0xFFF2F2F2);
-  static const dividerColor = Color(0xFFC4C4C4);
-  static const onSurfaceColor = Color(0xFF747474);
-  static const cardColorDark = Color(0xFFEAEAEA);
-  static const successColor = Color(0xFFA4CC4F);
-  static const errorColor = Color(0xFFBF0813);
+  static const surfaceColor = Color(0xFFF3F6F8);
+  static const dividerColor = Color(0xFFE1E1E1);
+  static const onSurfaceColor = Color(0xFF6A7178);
+  static const cardColorDark = Color(0xFFF8F9FA);
+  static const successColor = Color(0xFF076C4D);
+  static const errorColor = Color(0xFF8D1D1D);
 
   static const textFieldBorderColor = Color(0xFFD9D9D9);
 }
