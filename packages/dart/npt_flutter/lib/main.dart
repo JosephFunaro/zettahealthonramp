@@ -8,7 +8,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   var windowOptions = const WindowOptions(
-    title: "ZettaHealth OnRamp",
+    title: "CareNET360 Manual Manager",
     minimumSize: Constants.kWindowsMinWindowSize,
     skipTaskbar: false,
   );
