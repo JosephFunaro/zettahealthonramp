@@ -18,7 +18,7 @@ class Routes {
 class HomeRoutes {
   static const dashboard = '/dashboard';
   static const settings = '/settings';
-  static const authorisation = '/authorization';
+  //static const authorisation = '/authorization';
   static const profileForm = '/profile';
   static const loadingPage = '/loading';
 
@@ -27,8 +27,8 @@ class HomeRoutes {
     // Even though it then instantly pushes the Dashboard page.
     '/': (_) => const SizedBox.shrink(),
     dashboard: (_) => const DashboardPage(),
-    settings: (_) => const SettingsPage(),
-    authorisation: (_) => const AuthorisationPage(),
+    //settings: (_) => const SettingsPage(),
+    //authorisation: (_) => const AuthorisationPage(),
     profileForm: (_) => const ProfileFormPage(),
     loadingPage: (_) => const LoadingPage(),
   };
@@ -36,15 +36,16 @@ class HomeRoutes {
 
 String routeName(String route) {
   final uncapitalized = route.split('/').last;
-  final capitalized = uncapitalized[0].toUpperCase() + uncapitalized.substring(1);
+  final capitalized =
+      uncapitalized[0].toUpperCase() + uncapitalized.substring(1);
   final strings = AppLocalizations.of(App.navState.currentContext!)!;
   switch (capitalized) {
     case 'Dashboard':
       return strings.dashboard;
-    case 'Settings':
-      return strings.settings;
-    case 'Authorisation':
-      return strings.authorisation;
+    //case 'Settings':
+    //  return strings.settings;
+    // case 'Authorisation':
+    //return strings.authorisation;
     case 'Profile':
       return strings.profile;
     case 'Loading':
