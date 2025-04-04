@@ -41,7 +41,7 @@
    "duplicate": "Duplicate",
    "edit": "Edit",
    "email": "Email Support",
-   "emptyProfileMessage": "No profiles found.\nCreate or Import a profile to start using CareNET360 Manual Manager.",
+   "emptyProfileMessage": "No profiles found.\nCreate a manual connection on the CareNET360 Website to start using CareNET360 Manual Manager.",
    "enableLogging": "Enable Logging",
    "enroll": "Enroll",
    "enrollApproved": "Enrollment request approved",

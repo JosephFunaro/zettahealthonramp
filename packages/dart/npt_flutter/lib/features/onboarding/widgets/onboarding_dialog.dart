@@ -39,17 +39,18 @@ class OnboardingDialog extends StatelessWidget {
                     AtsignSelector(
                       options: options,
                     ),
-                    gapH16,
-                    Text(strings.selectorTitleRootDomain),
-                    AtDirectorySelector(
-                      options: options,
-                    ),
+                    //gapH16,
+                    //Text(strings.selectorTitleRootDomain),
+                    //AtDirectorySelector(
+                    //  options: options,
+                    //),
                   ],
                 ),
               ),
             ),
             gapH10,
-            BlocBuilder<OnboardingCubit, OnboardingState>(builder: (context, state) {
+            BlocBuilder<OnboardingCubit, OnboardingState>(
+                builder: (context, state) {
               return SizedBox(
                 width: width,
                 child: CustomContainer.background(
@@ -63,7 +64,9 @@ class OnboardingDialog extends StatelessWidget {
                     ),
                     const Spacer(),
                     ElevatedButton(
-                      onPressed: FormValidator.validateRequiredAtsignField(state.atSign) == null
+                      onPressed: FormValidator.validateRequiredAtsignField(
+                                  state.atSign) ==
+                              null
                           ? () {
                               Navigator.of(context).pop(true);
                             }

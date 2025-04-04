@@ -5,7 +5,7 @@ class AppColor {
   static const surfaceColor = Color(0xFFF3F6F8);
   static const dividerColor = Color(0xFFE1E1E1);
   static const onSurfaceColor = Color(0xFF6A7178);
-  static const cardColorDark = Color(0xFFF8F9FA);
+  static const cardColorDark = Color(0xFFFFFFFF);
   static const successColor = Color(0xFF076C4D);
   static const errorColor = Color(0xFF8D1D1D);
 
