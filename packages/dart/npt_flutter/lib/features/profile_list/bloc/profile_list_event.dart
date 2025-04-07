@@ -7,6 +7,15 @@ sealed class ProfileListEvent extends Loggable {
   List<Object> get props => [];
 }
 
+final class ProfileListImported extends ProfileListEvent {
+  final List<String> profiles; // These are UUIDs
+
+  const ProfileListImported(this.profiles);
+
+  @override
+  List<Object> get props => [profiles];
+}
+
 final class ProfileListLoadEvent extends ProfileListEvent {
   const ProfileListLoadEvent();
 

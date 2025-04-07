@@ -15,6 +15,7 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     on<ProfileListUpdateEvent>(_onUpdate);
     on<ProfileListDeleteEvent>(_onDelete);
     on<ProfileListAddEvent>(_onAdd);
+    on<ProfileListImported>(_onImport);
   }
 
   void clearAll() => emit(const ProfileListInitial());
@@ -84,5 +85,12 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     }
 
     emit(ProfileListLoaded(profiles: profiles));
+  }
+
+  Future<void> _onImport(
+    ProfileListImported event,
+    Emitter<ProfileListState> emit,
+  ) async {
+    emit(ProfileListLoaded(profiles: event.profiles));
   }
 }
