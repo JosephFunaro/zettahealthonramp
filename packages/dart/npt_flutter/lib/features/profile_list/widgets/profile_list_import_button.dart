@@ -4,6 +4,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/util/export.dart';
 import 'package:npt_flutter/widgets/multi_select_dialog.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:npt_flutter/features/profile/profile.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../../../styles/sizes.dart';
 import '../cubit/profiles_selected_cubit.dart';
@@ -16,7 +19,8 @@ class ProfileListImportButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return BlocSelector<ProfilesSelectedCubit, ProfilesSelectedState, Set<String>>(
+    return BlocSelector<ProfilesSelectedCubit, ProfilesSelectedState,
+            Set<String>>(
         selector: (state) => state.selected,
         builder: (BuildContext context, Set<String> selected) {
           // Hide this button if something is selected
@@ -47,5 +51,19 @@ class ProfileListImportButton extends StatelessWidget {
             ),
           );
         });
+  }
+}
+
+// api_service.dart
+class ApiService {
+  Future<List<Profile>> fetchProfiles() async {
+    final response = await http.get(Uri.parse(
+        'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=guid'));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      return data.map((json) => Profile.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load profiles');
+    }
   }
 }

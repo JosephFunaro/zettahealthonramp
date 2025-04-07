@@ -8,7 +8,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   var windowOptions = const WindowOptions(
-    title: "CareNET360 Manual Manager",
+    title: "Connection Manager",
     minimumSize: Constants.kWindowsMinWindowSize,
     skipTaskbar: false,
   );

@@ -101,7 +101,7 @@ class _ProfileListViewState extends State<ProfileListView> {
                                     children: [
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      //ProfileListImportButton(),
+                                      ProfileListImportButton(),
                                     ],
                                   ),
                             gapH25,

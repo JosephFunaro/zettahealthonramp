@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 //import 'package:npt_flutter/features/authorisation/widgets/authorisation_app_bar_button.dart';
+import 'package:npt_flutter/features/onboarding/util/pre_offboard.dart';
+import 'package:npt_flutter/pages/loading_page.dart';
 import 'package:npt_flutter/home_wrapper_widget.dart';
 import 'package:npt_flutter/pages/sub_nav_cubit.dart';
 import 'package:npt_flutter/routes.dart';
@@ -115,8 +117,8 @@ class _NptAppBarState extends State<NptAppBar> {
                   ),
               ],
             ),
-            /* actions: [
-              IgnorePointer(
+            actions: [
+              /*IgnorePointer(
                 ignoring: !isDashboard,
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
@@ -124,7 +126,7 @@ class _NptAppBarState extends State<NptAppBar> {
                   opacity: isDashboard ? 1 : 0,
                   child: const AuthorisationAppBarButton(),
                 ),
-              ),
+              ),*/
               IgnorePointer(
                 ignoring: !isDashboard,
                 child: AnimatedOpacity(
@@ -132,18 +134,31 @@ class _NptAppBarState extends State<NptAppBar> {
                   curve: Curves.easeInOut,
                   opacity: isDashboard ? 1 : 0,
                   child: IconButton(
-                    tooltip: strings.settings,
+                    tooltip: 'Sign Out',
                     icon: const Icon(
-                      Icons.settings_outlined,
+                      Icons.logout_outlined,
                     ),
                     onPressed: () {
-                      wrapperNav.currentState!.pushNamed(HomeRoutes.settings);
+                      wrapperNav.currentState!.pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const LoadingPage()),
+                        (route) => false,
+                      );
+                      preSignout();
+                      if (context.mounted) {
+                        Navigator.of(context, rootNavigator: true)
+                            .pushNamedAndRemoveUntil(
+                          Routes.onboarding,
+                          (route) => false,
+                        );
+                      }
+                      ;
                     },
                   ),
                 ),
               ),
               gapW103,
-            ],*/
+            ],
           ),
         );
       },
