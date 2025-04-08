@@ -14,7 +14,7 @@ class ContactListTile extends StatelessWidget {
     final contactRepo = ContactsService.getInstance();
     final strings = AppLocalizations.of(context)!;
 
-    final bodyMedium = Theme.of(context).textTheme.bodyMedium!;
+    //final bodyMedium = Theme.of(context).textTheme.bodyMedium!;
     final bodySmall = Theme.of(context).textTheme.bodySmall!;
     return FutureBuilder(
         future: contactRepo.getCurrentAtsignContactDetails(),
@@ -28,13 +28,15 @@ class ContactListTile extends StatelessWidget {
                   color: AppColor.cardColorDark,
                 ),
                 child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: Sizes.p30),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: Sizes.p30),
                     dense: true,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(Sizes.p8.toFont),
                     ),
                     title: Text(
-                      contactRepo.atClientManager.atClient.getCurrentAtSign() ?? '',
+                      contactRepo.atClientManager.atClient.getCurrentAtSign() ??
+                          '',
                       style: bodySmall.copyWith(fontSize: 8.toFont),
                     )),
               ),

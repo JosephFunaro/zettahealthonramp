@@ -35,7 +35,8 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
   @override
   void initState() {
     super.initState();
-    controller = TextEditingController(text: ref.read(filePickerController.notifier).fileName);
+    controller = TextEditingController(
+        text: ref.read(filePickerController.notifier).fileName);
 
     controller.addListener(
       () {
@@ -83,12 +84,13 @@ class _FilePickerFieldState extends ConsumerState<FilePickerField> {
                 fillColor: kProfileFormFieldColor,
                 border: InputBorder.none,
                 hintText: AppLocalizations.of(context)!.selectPrivateKey,
-                hintStyle: bodySmall.copyWith(fontSize: bodySmall.fontSize!.toFont),
+                hintStyle:
+                    bodySmall.copyWith(fontSize: bodySmall.fontSize!.toFont),
               ),
               validator: widget.validator,
               onTap: () async {
                 await ref.read(filePickerController.notifier).getFileDetails();
-                controller.notifyListeners();
+                //controller.notifyListeners();
               },
             ),
           ),

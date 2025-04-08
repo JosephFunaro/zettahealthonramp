@@ -87,8 +87,8 @@ extension Value on RootEnvironment {
         return 'root.atsign.org';
       case RootEnvironment.Testing:
         return 'vip.ve.atsign.zone';
-      default:
-        return 'root.atsign.wtf';
+      //default:
+      //return 'root.atsign.wtf';
     }
   }
 
@@ -100,8 +100,8 @@ extension Value on RootEnvironment {
         return AtOnboardingConstants.apiKey;
       case RootEnvironment.Testing:
         return AtOnboardingConstants.deviceapikey;
-      default:
-        return AtOnboardingConstants.deviceapikey;
+      //default:
+      //return AtOnboardingConstants.deviceapikey;
     }
   }
 
@@ -113,8 +113,8 @@ extension Value on RootEnvironment {
         return 'https://atsign.com';
       case RootEnvironment.Testing:
         return 'https://atsign.wtf';
-      default:
-        return 'https://atsign.wtf';
+      //default:
+      //return 'https://atsign.wtf';
     }
   }
 
@@ -126,8 +126,8 @@ extension Value on RootEnvironment {
         return 'https://wavi.ng/';
       case RootEnvironment.Testing:
         return 'https://directory.atsign.wtf/';
-      default:
-        return 'https://directory.atsign.wtf/';
+      //default:
+      //return 'https://directory.atsign.wtf/';
     }
   }
 }

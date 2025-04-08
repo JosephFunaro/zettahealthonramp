@@ -4,7 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 //import 'package:npt_flutter/util/export.dart';
 //import 'package:npt_flutter/widgets/multi_select_dialog.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:npt_flutter/features/profile/profile.dart';
+//import 'package:npt_flutter/features/profile/profile.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:npt_flutter/features/profile_list/bloc/profile_list_bloc.dart';

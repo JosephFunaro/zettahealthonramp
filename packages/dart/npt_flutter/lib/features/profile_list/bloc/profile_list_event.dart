@@ -14,6 +14,12 @@ final class ProfileListImported extends ProfileListEvent {
 
   @override
   List<Object> get props => [profiles];
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    throw UnimplementedError();
+  }
 }
 
 final class ProfileListLoadEvent extends ProfileListEvent {
