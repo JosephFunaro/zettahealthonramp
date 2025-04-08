@@ -91,6 +91,12 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     ProfileListImported event,
     Emitter<ProfileListState> emit,
   ) async {
-    emit(ProfileListLoaded(profiles: event.profiles));
+    final profileUuids = <String>[];
+    List<Profile> profileList = event.profiles;
+    for (var profile in profileList) {
+      await _repo.putProfile(profile);
+      profileUuids.add(profile.uuid);
+    }
+    emit(ProfileListLoaded(profiles: profileUuids));
   }
 }

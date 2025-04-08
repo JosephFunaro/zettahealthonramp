@@ -89,11 +89,11 @@ class _ProfileListViewState extends State<ProfileListView> {
                                     children: [
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      //ProfileListImportButton(),
+                                      ProfileListImportButton(),
                                       //gapW10,
                                       //ProfileSelectedExportButton(),
                                       //gapW10,
-                                      //ProfileSelectedDeleteButton(),
+                                      ProfileSelectedDeleteButton(),
                                     ],
                                   )
                                 : const Row(
@@ -147,7 +147,7 @@ class _ProfileListViewState extends State<ProfileListView> {
                               log('previous: $previous, current: $current');
                               return previous != current;
                             }, builder: (context, state) {
-                              if (state == false) {
+                              if (state is ProfileListLoading) {
                                 return Column(
                                   children: [
                                     isFullProfile ? gapH25 : gap0,

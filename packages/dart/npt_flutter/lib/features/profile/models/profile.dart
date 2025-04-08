@@ -15,6 +15,7 @@ final class Profile extends Loggable with Favoritable {
   final String? relayAtsign;
   final String sshnpdAtsign;
   final String deviceName;
+  final String friendlyName;
   final String remoteHost;
   final int remotePort;
   final int localPort;
@@ -25,6 +26,7 @@ final class Profile extends Loggable with Favoritable {
     this.relayAtsign,
     required this.sshnpdAtsign,
     required this.deviceName,
+    required this.friendlyName,
     this.remoteHost = 'localhost',
     required this.remotePort,
     required this.localPort,
@@ -36,6 +38,7 @@ final class Profile extends Loggable with Favoritable {
     String? relayAtsign,
     String? sshnpdAtsign,
     String? deviceName,
+    String? friendlyName,
     String? remoteHost,
     int? remotePort,
     int? localPort,
@@ -46,6 +49,7 @@ final class Profile extends Loggable with Favoritable {
       relayAtsign: relayAtsign ?? this.relayAtsign,
       sshnpdAtsign: sshnpdAtsign ?? this.sshnpdAtsign,
       deviceName: deviceName ?? this.deviceName,
+      friendlyName: friendlyName ?? this.friendlyName,
       remoteHost: remoteHost ?? this.remoteHost,
       remotePort: remotePort ?? this.remotePort,
       localPort: localPort ?? this.localPort,
@@ -91,7 +95,9 @@ final class Profile extends Loggable with Favoritable {
     bool overrideRelayWithFallback = false,
   }) {
     String srvdAtSign = fallbackRelayAtsign;
-    if (!overrideRelayWithFallback && relayAtsign != null && relayAtsign!.isNotEmpty) {
+    if (!overrideRelayWithFallback &&
+        relayAtsign != null &&
+        relayAtsign!.isNotEmpty) {
       srvdAtSign = relayAtsign!;
     }
     return NptParams(

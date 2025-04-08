@@ -8,7 +8,7 @@ sealed class ProfileListEvent extends Loggable {
 }
 
 final class ProfileListImported extends ProfileListEvent {
-  final List<String> profiles; // These are UUIDs
+  final List<Profile> profiles; // These are UUIDs
 
   const ProfileListImported(this.profiles);
 
@@ -17,8 +17,7 @@ final class ProfileListImported extends ProfileListEvent {
 
   @override
   String toString() {
-    // TODO: implement toString
-    throw UnimplementedError();
+    return 'ProfileListImported($profiles)';
   }
 }
 
