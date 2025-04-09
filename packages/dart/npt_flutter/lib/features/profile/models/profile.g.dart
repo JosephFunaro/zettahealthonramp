@@ -12,7 +12,7 @@ Profile _$ProfileFromJson(Map<String, dynamic> json) => Profile(
       relayAtsign: json['relayAtsign'] as String?,
       sshnpdAtsign: json['sshnpdAtsign'] as String,
       deviceName: json['deviceName'] as String,
-      friendlyName: json['friendlyName'] as String,
+      //friendlyName: json['friendlyName'] as String,
       remoteHost: json['remoteHost'] as String? ?? 'localhost',
       remotePort: (json['remotePort'] as num).toInt(),
       localPort: (json['localPort'] as num).toInt(),

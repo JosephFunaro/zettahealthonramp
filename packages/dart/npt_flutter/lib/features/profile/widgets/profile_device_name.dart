@@ -16,11 +16,11 @@ class ProfileDeviceName extends StatelessWidget {
         child: BlocSelector<ProfileBloc, ProfileState, (String, String)?>(
             selector: (state) {
           if (state is! ProfileLoadedState) return null;
-          return (state.profile.friendlyName, state.profile.sshnpdAtsign);
+          return (state.profile.deviceName, state.profile.sshnpdAtsign);
         }, builder: (BuildContext context, (String, String)? tuple) {
           if (tuple == null) return gap0;
           var (deviceName, sshnpdAtSign) = tuple;
-          return Tooltip(message: deviceName, child: Text(deviceName));
+          return Tooltip(message: sshnpdAtSign, child: Text(sshnpdAtSign));
         }),
       ),
     );

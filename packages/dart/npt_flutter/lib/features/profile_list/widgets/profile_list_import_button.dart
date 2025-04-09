@@ -35,7 +35,10 @@ class ProfileListImportButton extends StatelessWidget {
                 if (context.mounted) {
                   context
                       .read<ProfileListBloc>()
-                      .add(ProfileListImported(guids));
+                      .add(ProfileListDeleteEvent(toDelete: selected));
+                  context
+                      .read<ProfileListBloc>()
+                      .add(ProfileListAddEvent(guids));
                 }
               } catch (e) {
                 debugPrint('Error fetching profiles: $e');
@@ -80,7 +83,7 @@ class ProfileImportService {
             relayAtsign: "@rv_am",
             sshnpdAtsign: entry["ServerDataKey"],
             deviceName: entry["ServiceDeviceName"],
-            friendlyName: entry["ServerEndpointFriendlyName"],
+            //friendlyName: entry["ServerEndpointFriendlyName"],
             remotePort: entry["ServicePort"],
             localPort: entry["ClientPort"]);
         uuids.add(newProfile);

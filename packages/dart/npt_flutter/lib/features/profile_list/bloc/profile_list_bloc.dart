@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:npt_flutter/app.dart';
-import 'package:npt_flutter/features/favorite/favorite.dart';
+//import 'package:npt_flutter/features/favorite/favorite.dart';
 import 'package:npt_flutter/features/profile/profile.dart';
 
 part 'profile_list_event.dart';
@@ -15,7 +15,6 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     on<ProfileListUpdateEvent>(_onUpdate);
     on<ProfileListDeleteEvent>(_onDelete);
     on<ProfileListAddEvent>(_onAdd);
-    on<ProfileListImported>(_onImport);
   }
 
   void clearAll() => emit(const ProfileListInitial());
@@ -46,28 +45,16 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
 
   Future<void> _onDelete(
       ProfileListDeleteEvent event, Emitter<ProfileListState> emit) async {
-    // Don't allow deletes unless listed is loaded - this reduces the number of edge cases significantly
-    if (state is! ProfileListLoaded) {
-      return;
-    }
-    var profiles = (state as ProfileListLoaded).profiles;
+    if (state is! ProfileListLoaded) return;
 
-    emit(ProfileListLoaded(
-      profiles: profiles.where((profile) => !event.toDelete.contains(profile)),
-    ));
-    var bloc = App.navState.currentContext?.read<FavoriteBloc>();
-    var favoritesToRemove = <Favorite>[];
-    var loadedFavorites = <Favorite>[];
-    if (bloc != null && bloc.state is FavoritesLoaded) {
-      loadedFavorites = (bloc.state as FavoritesLoaded).favorites.toList();
+    final profiles = (state as ProfileListLoaded).profiles;
+
+    for (final profile in profiles) {
+      unawaited(_repo.deleteProfile(
+          profile)); // or just profile if your method accepts full object
     }
-    for (final uuid in event.toDelete) {
-      for (final fav in loadedFavorites) {
-        if (fav.containsProfile(uuid)) favoritesToRemove.add(fav);
-      }
-      unawaited(_repo.deleteProfile(uuid));
-    }
-    bloc?.add(FavoriteRemoveEvent(favoritesToRemove));
+
+    emit(const ProfileListLoaded(profiles: [])); // Clear the list
   }
 
   Future<void> _onAdd(
@@ -85,18 +72,5 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     }
 
     emit(ProfileListLoaded(profiles: profiles));
-  }
-
-  Future<void> _onImport(
-    ProfileListImported event,
-    Emitter<ProfileListState> emit,
-  ) async {
-    final profileUuids = <String>[];
-    List<Profile> profileList = event.profiles;
-    for (var profile in profileList) {
-      await _repo.putProfile(profile);
-      profileUuids.add(profile.uuid);
-    }
-    emit(ProfileListLoaded(profiles: profileUuids));
   }
 }
