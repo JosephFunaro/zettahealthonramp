@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -13,6 +16,7 @@ import 'package:npt_flutter/features/profile_list/bloc/profile_list_bloc.dart';
 import '../../../styles/sizes.dart';
 import '../cubit/profiles_selected_cubit.dart';
 import 'package:uuid/uuid.dart';
+import 'package:encrypt/encrypt.dart' as crypt;
 
 class ProfileListImportButton extends StatelessWidget {
   const ProfileListImportButton({
@@ -54,43 +58,113 @@ class ProfileListImportButton extends StatelessWidget {
   }
 }
 
+class AutoProfileFetcher extends StatefulWidget {
+  const AutoProfileFetcher({super.key});
+
+  @override
+  State<AutoProfileFetcher> createState() => _AutoProfileFetcherState();
+}
+
+class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the timer when the widget is initialized
+    _startAutoFetch();
+  }
+
+  void _startAutoFetch() {
+    _timer = Timer.periodic(const Duration(minutes: 5), (timer) async {
+      try {
+        final guids = await ProfileImportService().fetchProfileGuids();
+        if (!mounted) return; // This checks the actual State context
+        final selected = context.read<ProfilesSelectedCubit>().state.selected;
+        context
+            .read<ProfileListBloc>()
+            .add(ProfileListDeleteEvent(toDelete: selected));
+        context.read<ProfileListBloc>().add(ProfileListAddEvent(guids));
+      } catch (e) {
+        debugPrint('Error fetching profiles: $e');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancel timer when widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(); // Or any placeholder UI
+  }
+}
+
 class ProfileImportService {
   Future<List<Profile>> fetchProfileGuids() async {
+    // Read access data from the file
+    final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
+    final content = await accessDataFile.readAsString();
+    final parts = content.trim().split(' ');
+
+    if (parts.length != 2) {
+      throw Exception('Invalid format in accessdata.txt');
+    }
+
+    final guid = parts[0];
+    final accessToken = parts[1];
+
     final response = await http.post(
-        Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=7718465f-82c9-4059-baa4-dae130936c21'),
-        headers: <String, String>{
-          'access_token': 'zBsVgULhpFyt6AUaKuZsRm8CdyLAyBM8',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: '{}');
+      Uri.parse(
+          'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
+      headers: <String, String>{
+        'access_token': decrypt(
+            guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: '{}',
+    );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> decoded = jsonDecode(response.body);
-
       final connections = decoded['Connections'];
-      if (connections == null ||
-          connections['AsClient'] == null ||
-          connections['AsServer'] == null) {
+
+      if (connections == null || connections['AsClient'] == null) {
         throw Exception('No connections found');
       }
+
       final uuids = <Profile>[];
       final List<dynamic> clients = connections['AsClient'];
+
       for (var entry in clients) {
-        final newProfile = Profile(const Uuid().v4(),
-            displayName: entry["ServiceName"],
-            relayAtsign: "@rv_am",
-            sshnpdAtsign: entry["ServerDataKey"],
-            deviceName: entry["ServiceDeviceName"],
-            //friendlyName: entry["ServerEndpointFriendlyName"],
-            remotePort: entry["ServicePort"],
-            localPort: entry["ClientPort"]);
+        final newProfile = Profile(
+          const Uuid().v4(),
+          displayName: entry["ServiceName"],
+          relayAtsign: "@rv_am",
+          sshnpdAtsign: entry["ServerDataKey"],
+          deviceName: entry["ServiceDeviceName"],
+          friendlyName: entry["ServerEndpointFriendlyName"],
+          remotePort: entry["ServicePort"],
+          localPort: entry["ClientPort"],
+        );
         uuids.add(newProfile);
       }
+
       return uuids;
     } else {
-      throw Exception('Failed to load connections');
+      throw Exception('Failed to load connections: ${response.statusCode}');
     }
+  }
+
+  String decrypt(String keyString, crypt.Encrypted encryptedData) {
+    final key = crypt.Key.fromUtf8(keyString);
+    final encrypter = crypt.Encrypter(crypt.AES(key, mode: crypt.AESMode.cbc));
+    final initVector = crypt.IV.fromUtf8(keyString.substring(0, 16));
+    return encrypter.decrypt(encryptedData, iv: initVector);
   }
 }

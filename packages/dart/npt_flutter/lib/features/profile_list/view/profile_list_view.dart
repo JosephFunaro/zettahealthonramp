@@ -90,10 +90,11 @@ class _ProfileListViewState extends State<ProfileListView> {
                                       //ProfileListAddButton(),
                                       //gapW10,
                                       ProfileListImportButton(),
+                                      AutoProfileFetcher(),
                                       //gapW10,
                                       //ProfileSelectedExportButton(),
                                       //gapW10,
-                                      ProfileSelectedDeleteButton(),
+                                      //ProfileSelectedDeleteButton(),
                                     ],
                                   )
                                 : const Row(
@@ -102,6 +103,7 @@ class _ProfileListViewState extends State<ProfileListView> {
                                       //ProfileListAddButton(),
                                       //gapW10,
                                       ProfileListImportButton(),
+                                      AutoProfileFetcher()
                                     ],
                                   ),
                             gapH25,

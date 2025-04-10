@@ -53,6 +53,7 @@ dependencies:
   at_utils: ^3.0.16
   cupertino_icons: ^1.0.8
   device_info_plus: ^11.3.3
+  encrypt: ^5.0.3
   equatable: ^2.0.5
   file_picker: ^8.1.2
   flutter:

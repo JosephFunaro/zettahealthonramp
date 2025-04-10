@@ -83,7 +83,7 @@ class ProfileHeaderView extends StatelessWidget {
                             const EdgeInsets.symmetric(vertical: Sizes.p10),
                         child: Row(
                           children: [
-                            const ProfileSelectAllBox(),
+                            //const ProfileSelectAllBox(),
                             //gapW10,
                             ProfileHeaderColumn(
                                 title: strings.deviceName, width: width),

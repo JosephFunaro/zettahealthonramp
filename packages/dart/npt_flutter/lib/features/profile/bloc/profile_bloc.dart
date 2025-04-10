@@ -69,7 +69,7 @@ class ProfileBloc extends LoggingBloc<ProfileEvent, ProfileState> {
           sshnpdAtsign: '',
           relayAtsign: '',
           deviceName: '',
-          //friendlyName: '',
+          friendlyName: '',
           remotePort: 3389,
           localPort: 0,
         ),
