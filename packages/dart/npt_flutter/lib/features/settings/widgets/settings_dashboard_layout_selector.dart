@@ -17,7 +17,8 @@ class SettingsDashboardLayoutSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return BlocSelector<SettingsBloc, SettingsState, PreferredViewLayout?>(selector: (state) {
+    return BlocSelector<SettingsBloc, SettingsState, PreferredViewLayout?>(
+        selector: (state) {
       if (state is SettingsLoadedState) {
         return state.settings.viewLayout;
       }
@@ -29,23 +30,30 @@ class SettingsDashboardLayoutSelector extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(getPreferredViewLayoutText(context, PreferredViewLayout.minimal)),
+              Text(getPreferredViewLayoutText(
+                  context, PreferredViewLayout.sshStyle)),
               gapW20,
               Switch(
                 activeColor: Colors.black,
                 activeTrackColor: AppColor.primaryColor,
-                value: viewLayout == PreferredViewLayout.minimal ? false : true,
+                value:
+                    viewLayout == PreferredViewLayout.sshStyle ? false : true,
                 onChanged: (value) {
                   var bloc = context.read<SettingsBloc>();
                   bloc.add(SettingsEditEvent(
-                    settings: (bloc.state as SettingsLoadedState).settings.copyWith(
-                        viewLayout: value == false ? PreferredViewLayout.minimal : PreferredViewLayout.sshStyle),
+                    settings: (bloc.state as SettingsLoadedState)
+                        .settings
+                        .copyWith(
+                            viewLayout: value == false
+                                ? PreferredViewLayout.sshStyle
+                                : PreferredViewLayout.sshStyle),
                     save: true,
                   ));
                 },
               ),
               gapW20,
-              Text(getPreferredViewLayoutText(context, PreferredViewLayout.sshStyle)),
+              Text(getPreferredViewLayoutText(
+                  context, PreferredViewLayout.sshStyle)),
             ],
           ),
           gapH18,
@@ -65,7 +73,7 @@ class SettingsDashboardLayoutSelector extends StatelessWidget {
                   ),
                 ),
                 gapH10,
-                viewLayout == PreferredViewLayout.minimal
+                viewLayout == PreferredViewLayout.sshStyle
                     ? SvgPicture.asset('assets/simple.svg')
                     : SvgPicture.asset('assets/advance.svg'),
                 gapH16,
@@ -78,11 +86,12 @@ class SettingsDashboardLayoutSelector extends StatelessWidget {
   }
 }
 
-String getPreferredViewLayoutText(BuildContext context, PreferredViewLayout preferredViewLayout) {
+String getPreferredViewLayoutText(
+    BuildContext context, PreferredViewLayout preferredViewLayout) {
   final strings = AppLocalizations.of(context)!;
   switch (preferredViewLayout) {
     case PreferredViewLayout.minimal:
-      return strings.minimal;
+      return strings.sshStyle;
     case PreferredViewLayout.sshStyle:
       return strings.sshStyle;
   }

@@ -19,11 +19,11 @@ class ProfileViewMinimal extends StatelessWidget {
                 SizeConfig.setProfileFieldWidthMinimalView(statusField: true)),
         const Spacer(),
         const ProfileRunButton(),
-        gapW10,
-        const ProfileFavoriteButton(),
-        gapW10,
-        const ProfilePopupMenuButton(),
-        gapW20,
+        //gapW10,
+        //const ProfileFavoriteButton(),
+        //gapW10,
+        //const ProfilePopupMenuButton(),
+        //gapW20,
       ]);
     });
   }

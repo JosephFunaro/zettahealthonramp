@@ -23,7 +23,7 @@ class SettingsLanguageSelector extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Text(PreferredViewLayout.minimal.displayName),
+              Text(PreferredViewLayout.sshStyle.displayName),
               // gapW20,
               DropdownMenu<Language>(
                 initialSelection: language,

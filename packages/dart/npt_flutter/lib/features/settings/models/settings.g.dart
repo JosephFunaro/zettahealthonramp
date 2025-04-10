@@ -23,7 +23,6 @@ Map<String, dynamic> _$SettingsToJson(Settings instance) => <String, dynamic>{
     };
 
 const _$PreferredViewLayoutEnumMap = {
-  PreferredViewLayout.minimal: 'minimal',
   PreferredViewLayout.sshStyle: 'ssh-style',
 };
 

@@ -33,7 +33,7 @@
    "delete": "Delete",
    "deviceAtsign": "Device Endpoint",
    "deviceAtsignDescription": "This is the Endpoint associated with your device.",
-   "deviceName": "Endpoint Key",
+   "deviceName": "Endpoint Name",
    "deviceNameDescription": "This is the name of your remote device.",
    "disconnected": "Disconnected",
    "discord": "Discord Support",
