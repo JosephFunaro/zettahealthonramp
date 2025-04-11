@@ -16,6 +16,7 @@ final class Profile extends Loggable with Favoritable {
   final String sshnpdAtsign;
   final String deviceName;
   final String friendlyName;
+  final String startUpOption;
   final String remoteHost;
   final int remotePort;
   final int localPort;
@@ -27,6 +28,7 @@ final class Profile extends Loggable with Favoritable {
     required this.sshnpdAtsign,
     required this.deviceName,
     required this.friendlyName,
+    required this.startUpOption,
     this.remoteHost = 'localhost',
     required this.remotePort,
     required this.localPort,
@@ -39,6 +41,7 @@ final class Profile extends Loggable with Favoritable {
     String? sshnpdAtsign,
     String? deviceName,
     String? friendlyName,
+    String? startUpOption,
     String? remoteHost,
     int? remotePort,
     int? localPort,
@@ -50,6 +53,7 @@ final class Profile extends Loggable with Favoritable {
       sshnpdAtsign: sshnpdAtsign ?? this.sshnpdAtsign,
       deviceName: deviceName ?? this.deviceName,
       friendlyName: friendlyName ?? this.friendlyName,
+      startUpOption: startUpOption ?? this.startUpOption,
       remoteHost: remoteHost ?? this.remoteHost,
       remotePort: remotePort ?? this.remotePort,
       localPort: localPort ?? this.localPort,
