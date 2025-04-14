@@ -14,11 +14,50 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 //import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
+//import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
 
-class ProfileRunButton extends StatelessWidget {
+class ProfileRunButton extends StatefulWidget {
   const ProfileRunButton({super.key});
+
+  @override
+  State<ProfileRunButton> createState() => _ProfileRunButtonState();
+}
+
+class _ProfileRunButtonState extends State<ProfileRunButton> {
+  StreamSubscription<ProfileState>? _blocSubscription;
+
+  Future<void> _updateConnectionStatus(
+      bool isSuccess, String serverClientGUID) async {
+    final profileUpdateService = ProfileUpdateService();
+    try {
+      await profileUpdateService.updateProfileStatus(
+          isSuccess, serverClientGUID);
+      debugPrint(
+          'Connection status updated: ${isSuccess ? "Success" : "Failure"} for GUID: $serverClientGUID');
+    } catch (e) {
+      debugPrint('Failed to update connection status: $e');
+    }
+  }
+
+  void _handleStateChange(
+      ProfileState newState, String serverClientGUID) async {
+    if (!mounted) return; // Ensure the widget is still mounted
+    if (newState is ProfileStarted) {
+      // Profile successfully started
+      await _updateConnectionStatus(true, serverClientGUID);
+    } else if (newState is ProfileFailedStart) {
+      // Profile failed to start
+      await _updateConnectionStatus(false, serverClientGUID);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Cancel the subscription when the widget is disposed
+    _blocSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,26 +70,43 @@ class ProfileRunButton extends StatelessWidget {
           }
           return null;
         },
-        builder: (BuildContext context, ProfileLoadedState? state) =>
-            switch (state) {
-          null => gap0,
-          ProfileLoaded() ||
-          ProfileFailedSave() ||
-          ProfileFailedStart() =>
-            IconButton(
-              icon: PhosphorIcon(PhosphorIcons.play()),
-              onPressed: () {
-                context.read<ProfileBloc>().add(const ProfileStartEvent());
-              },
-            ),
-          ProfileStarting() => const Spinner(),
-          ProfileStarted() => IconButton(
-              icon: PhosphorIcon(PhosphorIcons.stop()),
-              onPressed: () {
-                context.read<ProfileBloc>().add(const ProfileStopEvent());
-              },
-            ),
-          ProfileStopping() => const Spinner(),
+        builder: (BuildContext context, ProfileLoadedState? state) {
+          if (state == null) {
+            return gap0;
+          }
+
+          final profile = state.profile; // Access the selected profile
+          final serverClientGUID = profile.serverClientGUID;
+
+          return switch (state) {
+            ProfileLoaded() ||
+            ProfileFailedSave() ||
+            ProfileFailedStart() =>
+              IconButton(
+                icon: PhosphorIcon(PhosphorIcons.play()),
+                onPressed: () {
+                  // Cancel any existing subscription to avoid duplicates
+                  _blocSubscription?.cancel();
+
+                  // Dispatch the start event
+                  context.read<ProfileBloc>().add(const ProfileStartEvent());
+
+                  // Listen for state changes
+                  _blocSubscription = context.read<ProfileBloc>().stream.listen(
+                        (newState) =>
+                            _handleStateChange(newState, serverClientGUID),
+                      );
+                },
+              ),
+            ProfileStarting() => const Spinner(),
+            ProfileStarted() => IconButton(
+                icon: PhosphorIcon(PhosphorIcons.stop()),
+                onPressed: () {
+                  context.read<ProfileBloc>().add(const ProfileStopEvent());
+                },
+              ),
+            ProfileStopping() => const Spinner(),
+          };
         },
       ),
     );
@@ -58,7 +114,8 @@ class ProfileRunButton extends StatelessWidget {
 }
 
 class ProfileUpdateService {
-  Future<void> fetchProfileGuids(String since) async {
+  Future<void> updateProfileStatus(
+      bool isSuccess, String serverClientGUID) async {
     // Read access data from the file
     final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
     final content = await accessDataFile.readAsString();
@@ -71,8 +128,20 @@ class ProfileUpdateService {
     final accessToken = parts[1];
 
     try {
-      // Make the API call
-      final getResponse = await http.post(
+      Map payloadData = {
+        "AsClient": [
+          {
+            "ServerClientGUID": serverClientGUID,
+            "Success": isSuccess,
+            "Message": isSuccess
+                ? "Client successfully started!"
+                : "Issue occurred when starting client."
+          }
+        ],
+        "AsServer": [{}]
+      };
+
+      final response = await http.post(
         Uri.parse(
             'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
         headers: <String, String>{
@@ -81,43 +150,7 @@ class ProfileUpdateService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: '{}',
-      );
-
-      if (getResponse.statusCode == 200) {
-        // Parse the response to determine success
-        final responseBody = jsonDecode(getResponse.body);
-        final isSuccess = responseBody['status'] ==
-            'success'; // Adjust based on API response structure
-
-        // Send the success or failure status
-        await _sendConnectionStatus(guid, isSuccess);
-      } else {
-        // Handle failure
-        await _sendConnectionStatus(guid, false);
-        throw Exception(
-            'Failed to load connections: ${getResponse.statusCode}');
-      }
-    } catch (e) {
-      // Handle errors and send failure status
-      await _sendConnectionStatus(guid, false);
-      rethrow;
-    }
-  }
-
-  Future<void> _sendConnectionStatus(String guid, bool isSuccess) async {
-    try {
-      final response = await http.post(
-        Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/status/v1'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'guid': guid,
-          'status': isSuccess ? 'success' : 'failure',
-        }),
+        body: json.encode(payloadData),
       );
 
       if (response.statusCode != 200) {
@@ -125,7 +158,7 @@ class ProfileUpdateService {
             'Failed to send connection status: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error sending connection status: $e');
+      throw Exception('Failed to connect: $e');
     }
   }
 

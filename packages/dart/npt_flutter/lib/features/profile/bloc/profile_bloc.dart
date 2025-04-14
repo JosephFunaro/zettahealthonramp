@@ -63,17 +63,16 @@ class ProfileBloc extends LoggingBloc<ProfileEvent, ProfileState> {
     if (profile == null) {
       emit(ProfileLoaded(
         uuid,
-        profile: Profile(
-          uuid,
-          displayName: '',
-          sshnpdAtsign: '',
-          relayAtsign: '',
-          deviceName: '',
-          friendlyName: '',
-          startUpOption: '',
-          remotePort: 3389,
-          localPort: 0,
-        ),
+        profile: Profile(uuid,
+            displayName: '',
+            sshnpdAtsign: '',
+            relayAtsign: '',
+            deviceName: '',
+            friendlyName: '',
+            startUpOption: '',
+            remotePort: 3389,
+            localPort: 0,
+            serverClientGUID: ''),
       ));
       return;
     }

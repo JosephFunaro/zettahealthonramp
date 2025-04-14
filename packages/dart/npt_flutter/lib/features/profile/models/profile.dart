@@ -20,6 +20,7 @@ final class Profile extends Loggable with Favoritable {
   final String remoteHost;
   final int remotePort;
   final int localPort;
+  final String serverClientGUID;
 
   const Profile(
     this.uuid, {
@@ -32,6 +33,7 @@ final class Profile extends Loggable with Favoritable {
     this.remoteHost = 'localhost',
     required this.remotePort,
     required this.localPort,
+    required this.serverClientGUID,
   });
 
   Profile copyWith({
@@ -45,6 +47,7 @@ final class Profile extends Loggable with Favoritable {
     String? remoteHost,
     int? remotePort,
     int? localPort,
+    String? serverClientGUID,
   }) {
     return Profile(
       uuid ?? this.uuid,
@@ -57,6 +60,7 @@ final class Profile extends Loggable with Favoritable {
       remoteHost: remoteHost ?? this.remoteHost,
       remotePort: remotePort ?? this.remotePort,
       localPort: localPort ?? this.localPort,
+      serverClientGUID: serverClientGUID ?? this.serverClientGUID,
     );
   }
 

@@ -149,17 +149,16 @@ class ProfileImportService {
           final String startUpOption = decoded['Endpoint']['StartUpOption'];
 
           for (var entry in clients) {
-            final newProfile = Profile(
-              const Uuid().v4(),
-              displayName: entry["ServiceName"],
-              relayAtsign: "@rv_am",
-              sshnpdAtsign: entry["ServerDataKey"],
-              deviceName: entry["ServiceDeviceName"],
-              friendlyName: entry["ServerEndpointFriendlyName"],
-              startUpOption: startUpOption,
-              remotePort: entry["ServicePort"],
-              localPort: entry["ClientPort"],
-            );
+            final newProfile = Profile(const Uuid().v4(),
+                displayName: entry["ServiceName"],
+                relayAtsign: "@rv_am",
+                sshnpdAtsign: entry["ServerDataKey"],
+                deviceName: entry["ServiceDeviceName"],
+                friendlyName: entry["ServerEndpointFriendlyName"],
+                startUpOption: startUpOption,
+                remotePort: entry["ServicePort"],
+                localPort: entry["ClientPort"],
+                serverClientGUID: entry["ServerClientGUID"]);
             uuids.add(newProfile);
           }
           return uuids;
