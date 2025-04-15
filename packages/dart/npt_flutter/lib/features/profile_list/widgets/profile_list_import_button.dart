@@ -77,19 +77,11 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 
   void _startAutoFetch() {
     String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
+    fetchProfiles(since);
+    since = DateTime.now().toUtc().toString(); // Update the since variable
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
-      try {
-        final guids = await ProfileImportService().fetchProfileGuids(since);
-        since = DateTime.now().toUtc().toString(); // Update the since variable
-        if (!mounted) return; // This checks the actual State context
-        final selected = context.read<ProfilesSelectedCubit>().state.selected;
-        context
-            .read<ProfileListBloc>()
-            .add(ProfileListDeleteEvent(toDelete: selected));
-        context.read<ProfileListBloc>().add(ProfileListAddEvent(guids));
-      } catch (e) {
-        debugPrint('Error fetching profiles: $e');
-      }
+      fetchProfiles(since);
+      since = DateTime.now().toUtc().toString(); // Update the since variable
     });
   }
 
@@ -98,6 +90,20 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     // Cancel timer when widget is disposed
     _timer?.cancel();
     super.dispose();
+  }
+
+  void fetchProfiles(String since) async {
+    try {
+      final guids = await ProfileImportService().fetchProfileGuids(since);
+      if (!mounted) return; // This checks the actual State context
+      final selected = context.read<ProfilesSelectedCubit>().state.selected;
+      context
+          .read<ProfileListBloc>()
+          .add(ProfileListDeleteEvent(toDelete: selected));
+      context.read<ProfileListBloc>().add(ProfileListAddEvent(guids));
+    } catch (e) {
+      debugPrint('Error fetching profiles: $e');
+    }
   }
 
   @override
