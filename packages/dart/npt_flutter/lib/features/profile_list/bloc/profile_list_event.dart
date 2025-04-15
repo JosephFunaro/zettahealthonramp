@@ -42,8 +42,6 @@ final class ProfileListDeleteEvent extends ProfileListEvent {
   }
 }
 
-// asynchronously add an entire list of profiles at once
-// useful for importing which is dependant on a ton of async tasks
 final class ProfileListAddEvent extends ProfileListEvent {
   final Iterable<Profile> toAdd;
   const ProfileListAddEvent(this.toAdd);
@@ -54,5 +52,19 @@ final class ProfileListAddEvent extends ProfileListEvent {
   @override
   String toString() {
     return 'ProfileListAddEvent(toAdd: $toAdd)';
+  }
+}
+
+final class ProfileListFilterEvent extends ProfileListEvent {
+  final String filterText;
+
+  const ProfileListFilterEvent({required this.filterText});
+
+  @override
+  List<Object> get props => [filterText];
+
+  @override
+  String toString() {
+    return 'ProfileListFilterEvent(filterText: $filterText)';
   }
 }

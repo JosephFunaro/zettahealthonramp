@@ -1,1 +1,25 @@
-{}
+{
+  "es": [
+    "searchProfiles"
+  ],
+
+  "pt": [
+    "searchProfiles"
+  ],
+
+  "pt_BR": [
+    "searchProfiles"
+  ],
+
+  "zh": [
+    "searchProfiles"
+  ],
+
+  "zh_Hans_CH": [
+    "searchProfiles"
+  ],
+
+  "zh_Hant_HK": [
+    "searchProfiles"
+  ]
+}

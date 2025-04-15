@@ -25,6 +25,14 @@ class ProfileListView extends StatefulWidget {
 }
 
 class _ProfileListViewState extends State<ProfileListView> {
+  final TextEditingController _searchController = TextEditingController();
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -84,26 +92,70 @@ class _ProfileListViewState extends State<ProfileListView> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             isFullProfile
-                                ? const Row(
+                                ? Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      // Add the search text field
+                                      Expanded(
+                                        flex: 2,
+                                        child: TextField(
+                                          controller: _searchController,
+                                          decoration: InputDecoration(
+                                            hintText: strings.searchProfiles,
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                            prefixIcon:
+                                                const Icon(Icons.search),
+                                          ),
+                                          onChanged: (value) {
+                                            context.read<ProfileListBloc>().add(
+                                                ProfileListFilterEvent(
+                                                    filterText: value));
+                                          },
+                                        ),
+                                      ),
+                                      gapW10,
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      ProfileListImportButton(),
-                                      AutoProfileFetcher(),
+                                      const ProfileListImportButton(),
+                                      const AutoProfileFetcher(),
                                       //gapW10,
                                       //ProfileSelectedExportButton(),
                                       //gapW10,
                                       //ProfileSelectedDeleteButton(),
                                     ],
                                   )
-                                : const Row(
+                                : Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      // Add the search text field
+                                      Expanded(
+                                        flex: 2,
+                                        child: TextField(
+                                          controller: _searchController,
+                                          decoration: InputDecoration(
+                                            hintText: strings.searchProfiles,
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                            prefixIcon:
+                                                const Icon(Icons.search),
+                                          ),
+                                          onChanged: (value) {
+                                            context.read<ProfileListBloc>().add(
+                                                ProfileListFilterEvent(
+                                                    filterText: value));
+                                          },
+                                        ),
+                                      ),
+                                      gapW10,
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      ProfileListImportButton(),
-                                      AutoProfileFetcher()
+                                      const ProfileListImportButton(),
+                                      const AutoProfileFetcher()
                                     ],
                                   ),
                             gapH25,

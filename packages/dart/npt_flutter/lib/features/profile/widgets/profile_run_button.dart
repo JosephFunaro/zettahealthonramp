@@ -88,14 +88,23 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
                   // Cancel any existing subscription to avoid duplicates
                   _blocSubscription?.cancel();
 
+                  // Check if the widget is still mounted and the Bloc is active
+                  if (!mounted) return;
+
+                  final profileBloc = context.read<ProfileBloc>();
+                  if (profileBloc.isClosed) {
+                    debugPrint('ProfileBloc is closed. Cannot add new events.');
+                    return;
+                  }
+
                   // Dispatch the start event
-                  context.read<ProfileBloc>().add(const ProfileStartEvent());
+                  profileBloc.add(const ProfileStartEvent());
 
                   // Listen for state changes
-                  _blocSubscription = context.read<ProfileBloc>().stream.listen(
-                        (newState) =>
-                            _handleStateChange(newState, serverClientGUID),
-                      );
+                  _blocSubscription = profileBloc.stream.listen(
+                    (newState) =>
+                        _handleStateChange(newState, serverClientGUID),
+                  );
                 },
               ),
             ProfileStarting() => const Spinner(),

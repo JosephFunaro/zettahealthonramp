@@ -41,7 +41,7 @@
    "duplicate": "Duplicate",
    "edit": "Edit",
    "email": "Email Support",
-   "emptyProfileMessage": "No profiles found.\nClick 'Fetch Data' button to sync Connection Manager.",
+   "emptyProfileMessage": "No profiles found.\nClick 'Fetch Data' button to sync Connection Manager, or adjust your search parameters.",
    "enableLogging": "Enable Logging",
    "enroll": "Enroll",
    "enrollApproved": "Enrollment request approved",
@@ -181,5 +181,6 @@
    "whereToAccept": "Where to accept?",
    "whereToAcceptDescription": "Please approve the request in an app with a manager key.",
    "yaml": "YAML",
-   "yamlRecommended": "YAML (Recommended)"
+   "yamlRecommended": "YAML (Recommended)",
+   "searchProfiles": "Filter by Protocol Name or Endpoint Name.."
 }
