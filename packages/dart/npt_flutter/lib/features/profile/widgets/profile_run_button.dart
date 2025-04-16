@@ -55,7 +55,7 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
   @override
   void dispose() {
     // Cancel the subscription when the widget is disposed
-    _blocSubscription?.cancel();
+    //_blocSubscription?.cancel();
     super.dispose();
   }
 

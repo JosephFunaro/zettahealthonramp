@@ -16,6 +16,7 @@ import '../../../styles/sizes.dart';
 import '../cubit/profiles_selected_cubit.dart';
 import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
+import 'package:npt_flutter/features/profile/bloc/profile_bloc.dart';
 
 class ProfileListImportButton extends StatelessWidget {
   const ProfileListImportButton({
@@ -34,6 +35,10 @@ class ProfileListImportButton extends StatelessWidget {
           return ElevatedButton.icon(
             onPressed: () async {
               try {
+                // Stop running profiles
+                await ProfileImportService().stopRunningProfiles(context);
+
+                // Fetch and import new profiles
                 final guids = await ProfileImportService().fetchProfileGuids(
                     DateTime(1900, 1, 1, 0, 0, 0).toString());
                 if (context.mounted) {
@@ -77,9 +82,14 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 
   void _startAutoFetch() {
     String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
+    ProfileImportService().stopRunningProfiles(context);
     fetchProfiles(since);
     since = DateTime.now().toUtc().toString(); // Update the since variable
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      // Stop running profiles
+      await ProfileImportService().stopRunningProfiles(context);
+
+      // Fetch new profiles
       fetchProfiles(since);
       since = DateTime.now().toUtc().toString(); // Update the since variable
     });
@@ -178,6 +188,34 @@ class ProfileImportService {
     } else {
       throw Exception(
           'Failed to load connections: ${checkResponse.statusCode}');
+    }
+  }
+
+  Future<void> stopRunningProfiles(BuildContext context) async {
+    try {
+      // Fetch all profiles from the repository
+      final profileListBloc = context.read<ProfileListBloc>();
+      if (profileListBloc.state is! ProfileListLoaded) return;
+
+      final profiles = (profileListBloc.state as ProfileListLoaded).profiles;
+
+      for (final uuid in profiles) {
+        // Retrieve the ProfileBloc for the current profile
+        final profileBloc = BlocProvider.of<ProfileBloc>(
+          context,
+          listen: false,
+        );
+        // Dynamically check the state of the ProfileBloc
+        if (profileBloc.state is ProfileStarted) {
+          profileBloc.add(const ProfileStopEvent());
+          debugPrint("$uuid is being stopped!");
+        } else {
+          debugPrint(
+              "$uuid is not running. Current state: ${profileBloc.state}");
+        }
+      }
+    } catch (e) {
+      debugPrint('Error stopping running profiles: $e');
     }
   }
 

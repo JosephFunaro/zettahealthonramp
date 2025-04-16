@@ -24,6 +24,7 @@ class ProfileBloc extends LoggingBloc<ProfileEvent, ProfileState> {
     on<ProfileStartEvent>(_onStart);
     on<ProfileStopEvent>(_onStop);
   }
+
   Future<void> _onLoad(
       ProfileLoadEvent event, Emitter<ProfileState> emit) async {
     emit(ProfileLoading(uuid));
