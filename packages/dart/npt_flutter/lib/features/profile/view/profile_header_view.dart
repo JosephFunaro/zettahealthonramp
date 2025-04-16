@@ -8,6 +8,7 @@ import 'package:npt_flutter/styles/sizes.dart';
 import 'package:npt_flutter/widgets/custom_card.dart';
 import 'package:npt_flutter/widgets/loader_bar.dart';
 import 'package:npt_flutter/widgets/spinner.dart';
+import 'package:npt_flutter/features/profile/helpers/profile_layout_helper.dart';
 
 class ProfileHeaderView extends StatelessWidget {
   const ProfileHeaderView({super.key});
@@ -52,59 +53,77 @@ class ProfileHeaderView extends StatelessWidget {
             builder: (BuildContext context, PreferredViewLayout? viewLayout) {
               return LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {
-                final width = SizeConfig.setProfileFieldWidth();
+                final columnWidth = ProfileLayoutHelper.calculateColumnWidth(
+                    constraints.maxWidth);
+
                 return switch (viewLayout) {
                   null => const Center(child: Spinner()),
                   PreferredViewLayout.minimal => CustomCard.profileHeader(
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: Sizes.p10),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: Sizes.p10), // Removed horizontal padding
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            //const ProfileSelectAllBox(),
-                            //gapW10,
+                            // First column (aligned left)
                             ProfileHeaderColumn(
-                                title: strings.deviceName, width: width),
-                            gapW10,
-                            ProfileHeaderColumn(
-                              title: strings.profileName,
-                              width: width,
+                                title: strings.deviceName, width: columnWidth),
+                            // Add gaps and other columns
+                            for (final column in [
+                              strings.profileName,
+                              strings.serviceMapping,
+                              strings.status,
+                            ]) ...[
+                              const SizedBox(
+                                  width: ProfileLayoutHelper.gapWidth),
+                              ProfileHeaderColumn(
+                                  title: column, width: columnWidth),
+                            ],
+                            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+                            // Center the "Start/Stop" column
+                            SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: ProfileHeaderColumn(
+                                    title: "Start/Stop",
+                                    width: columnWidth), // Centered column
+                              ),
                             ),
-                            gapW10,
-                            ProfileHeaderColumn(
-                                title: strings.serviceMapping, width: width),
-                            gapW10,
-                            ProfileHeaderColumn(
-                                title: strings.status,
-                                width: SizeConfig.setProfileFieldWidth(
-                                    statusField: true)),
                           ],
                         ),
                       ),
                     ),
                   PreferredViewLayout.sshStyle => CustomCard.profileHeader(
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: Sizes.p10),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: Sizes.p10), // Removed horizontal padding
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            //const ProfileSelectAllBox(),
-                            //gapW10,
+                            // First column (aligned left)
                             ProfileHeaderColumn(
-                                title: strings.deviceName, width: width),
-                            gapW10,
-                            ProfileHeaderColumn(
-                              title: strings.profileName,
-                              width: width,
+                                title: strings.deviceName, width: columnWidth),
+                            // Add gaps and other columns
+                            for (final column in [
+                              strings.profileName,
+                              strings.serviceMapping,
+                              strings.status,
+                            ]) ...[
+                              const SizedBox(
+                                  width: ProfileLayoutHelper.gapWidth),
+                              ProfileHeaderColumn(
+                                  title: column, width: columnWidth),
+                            ],
+                            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+                            // Center the "Start/Stop" column
+                            SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: ProfileHeaderColumn(
+                                    title: "Start/Stop",
+                                    width: columnWidth), // Centered column
+                              ),
                             ),
-                            gapW10,
-                            ProfileHeaderColumn(
-                                title: strings.serviceMapping, width: width),
-                            gapW10,
-                            ProfileHeaderColumn(
-                                title: strings.status,
-                                width: SizeConfig.setProfileFieldWidth(
-                                    statusField: true)),
                           ],
                         ),
                       ),

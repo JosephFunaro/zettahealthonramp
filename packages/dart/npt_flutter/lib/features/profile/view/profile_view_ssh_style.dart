@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:npt_flutter/features/profile/profile.dart';
-import 'package:npt_flutter/styles/sizes.dart';
+//import 'package:npt_flutter/styles/sizes.dart';
+import 'package:npt_flutter/features/profile/helpers/profile_layout_helper.dart';
 
 class ProfileViewSshStyle extends StatelessWidget {
   const ProfileViewSshStyle({super.key});
@@ -21,22 +22,59 @@ class ProfileViewSshStyle extends StatelessWidget {
 
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-      final width = SizeConfig.setProfileFieldWidth();
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        ProfileDeviceName(width: width),
-        gapW10,
-        ProfileDisplayName(width: width),
-        gapW10,
-        ProfileServiceView(width: width),
-        gapW10,
-        if (isAutoStart)
-          AutoStartStatusMessage(width: width)
-        else
-          ProfileStatusIndicator(
-              width: SizeConfig.setProfileFieldWidth(statusField: true)),
-        gapW10,
-        if (!isAutoStart) const Flexible(child: ProfileRunButton()),
-      ]);
+      final columnWidth =
+          ProfileLayoutHelper.calculateColumnWidth(constraints.maxWidth);
+
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // First column (aligned center)
+          SizedBox(
+            width: columnWidth,
+            child: Center(
+              child: ProfileDeviceName(width: columnWidth),
+            ),
+          ),
+          const SizedBox(width: ProfileLayoutHelper.gapWidth),
+          // Second column (aligned center)
+          SizedBox(
+            width: columnWidth,
+            child: Center(
+              child: ProfileDisplayName(width: columnWidth),
+            ),
+          ),
+          const SizedBox(width: ProfileLayoutHelper.gapWidth),
+          // Third column (aligned center)
+          SizedBox(
+            width: columnWidth,
+            child: Center(
+              child: ProfileServiceView(width: columnWidth),
+            ),
+          ),
+          const SizedBox(width: ProfileLayoutHelper.gapWidth),
+          // Fourth column (aligned center)
+          SizedBox(
+            width: columnWidth,
+            child: Center(
+              child: isAutoStart
+                  ? AutoStartStatusMessage(width: columnWidth)
+                  : ProfileStatusIndicator(
+                      width: columnWidth, // Ensure consistent width
+                    ),
+            ),
+          ),
+          const SizedBox(width: ProfileLayoutHelper.gapWidth),
+          // Fifth column (aligned center)
+          if (!isAutoStart)
+            SizedBox(
+              width: columnWidth,
+              child: const Center(
+                child: ProfileRunButton(), // Ensure the button is centered
+              ),
+            ),
+        ],
+      );
     });
   }
 }

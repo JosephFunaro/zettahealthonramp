@@ -51,7 +51,7 @@ class ProfileListImportButton extends StatelessWidget {
             },
             label: Text(strings.import),
             icon: PhosphorIcon(
-              PhosphorIcons.downloadSimple(),
+              PhosphorIcons.arrowClockwise(),
             ),
           );
         });

@@ -16,19 +16,24 @@ class ProfileDisplayName extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: BlocSelector<ProfileBloc, ProfileState, String?>(
-          selector: (ProfileState state) {
-            if (state is ProfileLoadedState) {
-              return state.profile.displayName;
-            }
-            return null;
-          },
-          builder: (BuildContext context, String? displayName) {
-            if (displayName == null) return gap0;
-            return Tooltip(message: displayName, child: Text(displayName));
-          },
+      child: Center(
+        // Ensure the content is centered
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: BlocSelector<ProfileBloc, ProfileState, String?>(
+            selector: (ProfileState state) {
+              if (state is ProfileLoadedState) {
+                return state.profile.displayName;
+              }
+              return null;
+            },
+            builder: (BuildContext context, String? displayName) {
+              if (displayName == null) return gap0;
+              return Tooltip(
+                  message: displayName,
+                  child: Text(displayName, textAlign: TextAlign.center));
+            },
+          ),
         ),
       ),
     );
