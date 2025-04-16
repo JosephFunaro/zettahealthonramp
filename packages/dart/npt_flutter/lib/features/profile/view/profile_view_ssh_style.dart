@@ -85,17 +85,18 @@ class AutoStartStatusMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Adjust the width to ensure the text fits on one line
-    final adjustedWidth = width > 300 ? width : 300; // Minimum width of 300
-
     return SizedBox(
-      width: adjustedWidth.toDouble(),
-      child: const StatusMessage(
-        tooltip:
-            "Endpoint set to automatically start. If you wish to control this Endpoint manually, please change the setting in the Endpoint Details.",
-        status: "Endpoint set to automatically start.",
-        color: Colors.blue,
-        icon: Icons.info,
+      width: width, // Use the same column width as other status messages
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+            vertical: 8.0), // Add consistent vertical padding
+        child: StatusMessage(
+          tooltip:
+              "Endpoint set to automatically start. If you wish to control this Endpoint manually, please change the setting in the Endpoint Details.",
+          status: "Auto-Start Endpoint.",
+          color: Colors.blue,
+          icon: Icons.info,
+        ),
       ),
     );
   }
