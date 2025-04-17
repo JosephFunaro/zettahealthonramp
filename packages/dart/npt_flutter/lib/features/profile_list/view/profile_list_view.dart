@@ -13,7 +13,6 @@ import 'package:npt_flutter/features/profile_list/profile_list.dart';
 import 'package:npt_flutter/features/profile_list/widgets/profile_list_failed_load_content.dart';
 import 'package:npt_flutter/styles/sizes.dart';
 import 'package:npt_flutter/widgets/spinner.dart';
-
 import '../../../widgets/custom_card.dart';
 import '../cubit/sync_cubit.dart';
 
@@ -165,17 +164,16 @@ class _ProfileListViewState extends State<ProfileListView> {
                                     child: ListView.builder(
                                       itemCount: state.profiles.length,
                                       itemBuilder: (context, index) {
-                                        return BlocProvider<ProfileBloc>(
-                                          key: Key(
-                                              "ProfileListView-BlocProvider-${profiles[index]}"),
-                                          create: (context) {
-                                            final cacheCubit = context
-                                                .read<ProfileCacheCubit>();
-                                            return cacheCubit.getProfileBloc(
-                                                profiles[index]);
-                                          },
-                                          child: const CustomCard.profile(
-                                              child: ProfileView()),
+                                        final cacheCubit =
+                                            context.read<ProfileCacheCubit>();
+                                        final profileBloc = cacheCubit
+                                            .getProfileBloc(profiles[index]);
+
+                                        return CustomCard.profile(
+                                          child: BlocProvider.value(
+                                            value: profileBloc,
+                                            child: const ProfileView(),
+                                          ),
                                         );
                                       },
                                     ),

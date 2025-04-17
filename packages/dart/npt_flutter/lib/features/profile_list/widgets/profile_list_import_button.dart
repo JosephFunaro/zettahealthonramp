@@ -17,6 +17,7 @@ import '../cubit/profiles_selected_cubit.dart';
 import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
 import 'package:npt_flutter/features/profile/bloc/profile_bloc.dart';
+import 'package:npt_flutter/features/profile/cubit/profile_cache_cubit.dart';
 
 class ProfileListImportButton extends StatelessWidget {
   const ProfileListImportButton({
@@ -27,39 +28,45 @@ class ProfileListImportButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
     return BlocSelector<ProfilesSelectedCubit, ProfilesSelectedState,
-            Set<String>>(
-        selector: (state) => state.selected,
-        builder: (BuildContext context, Set<String> selected) {
-          // Hide this button if something is selected
-          if (selected.isNotEmpty) return gap0;
-          return ElevatedButton.icon(
-            onPressed: () async {
-              try {
-                // Stop running profiles
-                await ProfileImportService().stopRunningProfiles(context);
+        Set<String>>(
+      selector: (state) => state.selected,
+      builder: (BuildContext context, Set<String> selected) {
+        // Hide this button if something is selected
+        if (selected.isNotEmpty) return gap0;
 
-                // Fetch and import new profiles
-                final guids = await ProfileImportService().fetchProfileGuids(
-                    DateTime(1900, 1, 1, 0, 0, 0).toString());
-                if (context.mounted) {
-                  context
-                      .read<ProfileListBloc>()
-                      .add(ProfileListDeleteEvent(toDelete: selected));
-                  context
-                      .read<ProfileListBloc>()
-                      .add(ProfileListAddEvent(guids));
-                }
-              } catch (e) {
-                debugPrint('Error fetching profiles: $e');
-                // Optionally show a snackbar or error UI
+        return ElevatedButton.icon(
+          onPressed: () async {
+            // Capture dependencies at the start of the callback
+            final profileCacheCubit = context.read<ProfileCacheCubit>();
+            final profileListBloc = context.read<ProfileListBloc>();
+
+            try {
+              // Stop running profiles
+              await ProfileImportService()
+                  .stopRunningProfiles(profileCacheCubit, profileListBloc);
+
+              // Fetch and import new profiles
+              final guids = await ProfileImportService().fetchProfileGuids(
+                DateTime(1900, 1, 1, 0, 0, 0).toString(),
+              );
+
+              // Use context.mounted to ensure the widget is still in the tree
+              if (context.mounted) {
+                profileListBloc.add(ProfileListDeleteEvent(toDelete: selected));
+                profileListBloc.add(ProfileListAddEvent(guids));
               }
-            },
-            label: Text(strings.import),
-            icon: PhosphorIcon(
-              PhosphorIcons.arrowClockwise(),
-            ),
-          );
-        });
+            } catch (e) {
+              debugPrint('Error fetching profiles: $e');
+              // Optionally show a snackbar or error UI
+            }
+          },
+          label: Text(strings.import),
+          icon: PhosphorIcon(
+            PhosphorIcons.arrowClockwise(),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -80,19 +87,49 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     _startAutoFetch();
   }
 
-  void _startAutoFetch() {
-    String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
-    ProfileImportService().stopRunningProfiles(context);
-    fetchProfiles(since);
-    since = DateTime.now().toUtc().toString(); // Update the since variable
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
-      // Stop running profiles
-      await ProfileImportService().stopRunningProfiles(context);
+  void _startAutoFetch() async {
+    // Capture dependencies at the start of the method
+    final profileCacheCubit = context.read<ProfileCacheCubit>();
+    final profileListBloc = context.read<ProfileListBloc>();
+    final profilesSelectedCubit = context.read<ProfilesSelectedCubit>();
 
-      // Fetch new profiles
-      fetchProfiles(since);
-      since = DateTime.now().toUtc().toString(); // Update the since variable
+    String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
+
+    // Check for updates and fetch profiles initially
+    bool isUpdateAvailable = await ProfileImportService().checkForUpdate(since);
+    if (isUpdateAvailable) {
+      await ProfileImportService()
+          .stopRunningProfiles(profileCacheCubit, profileListBloc);
+      await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
+    }
+
+    // Update the "since" timestamp
+    since = DateTime.now().toUtc().toString();
+
+    // Start periodic fetching
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      bool isUpdateAvailable =
+          await ProfileImportService().checkForUpdate(since);
+      if (isUpdateAvailable) {
+        await ProfileImportService()
+            .stopRunningProfiles(profileCacheCubit, profileListBloc);
+        await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
+      }
+      since = DateTime.now().toUtc().toString(); // Update the "since" timestamp
     });
+  }
+
+  Future<void> _fetchProfiles(String since, ProfileListBloc profileListBloc,
+      ProfilesSelectedCubit profilesSelectedCubit) async {
+    try {
+      final guids = await ProfileImportService().fetchProfileGuids(since);
+      final selected = profilesSelectedCubit.state.selected;
+
+      profileListBloc.add(ProfileListDeleteEvent(toDelete: selected));
+      profileListBloc.add(ProfileListAddEvent(guids));
+    } catch (e) {
+      debugPrint('Error fetching profiles: $e');
+    }
   }
 
   @override
@@ -102,20 +139,6 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     super.dispose();
   }
 
-  void fetchProfiles(String since) async {
-    try {
-      final guids = await ProfileImportService().fetchProfileGuids(since);
-      if (!mounted) return; // This checks the actual State context
-      final selected = context.read<ProfilesSelectedCubit>().state.selected;
-      context
-          .read<ProfileListBloc>()
-          .add(ProfileListDeleteEvent(toDelete: selected));
-      context.read<ProfileListBloc>().add(ProfileListAddEvent(guids));
-    } catch (e) {
-      debugPrint('Error fetching profiles: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return const SizedBox(); // Or any placeholder UI
@@ -123,6 +146,33 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 }
 
 class ProfileImportService {
+  Future<bool> checkForUpdate(String since) async {
+    // Read access data from the file
+    final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
+    final content = await accessDataFile.readAsString();
+    final parts = content.trim().split(' ');
+
+    if (parts.length != 2) {
+      throw Exception('Invalid format in accessdata.txt');
+    }
+    final guid = parts[0];
+    final checkResponse = await http.get(
+        Uri.parse(
+            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
+        headers: <String, String>{'Content-Type': 'text/plain'});
+    if (checkResponse.statusCode == 200) {
+      dynamic dataBody = jsonDecode(checkResponse.body);
+      if (dataBody == 1) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      throw Exception(
+          'Failed to check for updates: ${checkResponse.statusCode}');
+    }
+  }
+
   Future<List<Profile>> fetchProfileGuids(String since) async {
     // Read access data from the file
     final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
@@ -134,78 +184,58 @@ class ProfileImportService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
-    final checkResponse = await http.get(
-        Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
-        headers: <String, String>{'Content-Type': 'text/plain'});
-    if (checkResponse.statusCode == 200) {
-      dynamic dataBody = jsonDecode(checkResponse.body);
-      if (dataBody == 1) {
-        final getResponse = await http.post(
-          Uri.parse(
-              'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
-          headers: <String, String>{
-            'access_token': decrypt(
-                guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: '{}',
-        );
-        if (getResponse.statusCode == 200) {
-          final Map<String, dynamic> decoded = jsonDecode(getResponse.body);
-          final connections = decoded['Connections'];
+    final getResponse = await http.post(
+      Uri.parse(
+          'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
+      headers: <String, String>{
+        'access_token': decrypt(
+            guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: '{}',
+    );
+    if (getResponse.statusCode == 200) {
+      final Map<String, dynamic> decoded = jsonDecode(getResponse.body);
+      final connections = decoded['Connections'];
 
-          if (connections == null || connections['AsClient'] == null) {
-            throw Exception('No connections found');
-          }
-
-          final uuids = <Profile>[];
-          final List<dynamic> clients = connections['AsClient'];
-          final String startUpOption = decoded['Endpoint']['StartUpOption'];
-
-          for (var entry in clients) {
-            final newProfile = Profile(const Uuid().v4(),
-                displayName: entry["ServiceName"],
-                relayAtsign: "@rv_am",
-                sshnpdAtsign: entry["ServerDataKey"],
-                deviceName: entry["ServiceDeviceName"],
-                friendlyName: entry["ServerEndpointFriendlyName"],
-                startUpOption: startUpOption,
-                remotePort: entry["ServicePort"],
-                localPort: entry["ClientPort"],
-                serverClientGUID: entry["ServerClientGUID"]);
-            uuids.add(newProfile);
-          }
-          return uuids;
-        } else {
-          throw Exception(
-              'Failed to load connections: ${getResponse.statusCode}');
-        }
-      } else {
-        throw Exception('No new updates found since $since');
+      if (connections == null || connections['AsClient'] == null) {
+        throw Exception('No connections found');
       }
+
+      final uuids = <Profile>[];
+      final List<dynamic> clients = connections['AsClient'];
+      final String startUpOption = decoded['Endpoint']['StartUpOption'];
+
+      for (var entry in clients) {
+        final newProfile = Profile(const Uuid().v4(),
+            displayName: entry["ServiceName"],
+            relayAtsign: "@rv_am",
+            sshnpdAtsign: entry["ServerDataKey"],
+            deviceName: entry["ServiceDeviceName"],
+            friendlyName: entry["ServerEndpointFriendlyName"],
+            startUpOption: startUpOption,
+            remotePort: entry["ServicePort"],
+            localPort: entry["ClientPort"],
+            serverClientGUID: entry["ServerClientGUID"]);
+        uuids.add(newProfile);
+      }
+      return uuids;
     } else {
-      throw Exception(
-          'Failed to load connections: ${checkResponse.statusCode}');
+      throw Exception('Failed to load connections: ${getResponse.statusCode}');
     }
   }
 
-  Future<void> stopRunningProfiles(BuildContext context) async {
+  Future<void> stopRunningProfiles(ProfileCacheCubit profileCacheCubit,
+      ProfileListBloc profileListBloc) async {
     try {
-      // Fetch all profiles from the repository
-      final profileListBloc = context.read<ProfileListBloc>();
       if (profileListBloc.state is! ProfileListLoaded) return;
 
       final profiles = (profileListBloc.state as ProfileListLoaded).profiles;
 
       for (final uuid in profiles) {
-        // Retrieve the ProfileBloc for the current profile
-        final profileBloc = BlocProvider.of<ProfileBloc>(
-          context,
-          listen: false,
-        );
-        // Dynamically check the state of the ProfileBloc
+        final profileBloc = profileCacheCubit.getProfileBloc(uuid);
+
         if (profileBloc.state is ProfileStarted) {
           profileBloc.add(const ProfileStopEvent());
           debugPrint("$uuid is being stopped!");

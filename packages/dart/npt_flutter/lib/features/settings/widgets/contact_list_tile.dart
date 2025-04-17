@@ -14,10 +14,7 @@ class ContactListTile extends StatelessWidget {
     final contactRepo = ContactsService.getInstance();
     final strings = AppLocalizations.of(context)!;
 
-<<<<<<< HEAD
     //final bodyMedium = Theme.of(context).textTheme.bodyMedium!;
-=======
->>>>>>> 6feb9e1cac0afe9b3445016103fda4cefd988204
     final bodySmall = Theme.of(context).textTheme.bodySmall!;
     return FutureBuilder(
         future: contactRepo.getCurrentAtsignContactDetails(),
