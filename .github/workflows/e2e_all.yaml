@@ -33,9 +33,9 @@ jobs:
         env:
           SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         with:
-          host: ${{ secrets.NOPORTS_CICD_HOST }}
+          #host: ${{ secrets.NOPORTS_CICD_HOST }}
           username: ubuntu
-          key: ${{ secrets.NOPORTS_CICD_SSH_KEY }}
+          #key: ${{ secrets.NOPORTS_CICD_SSH_KEY }}
           envs: SHA
           command_timeout: 15m
           script: |

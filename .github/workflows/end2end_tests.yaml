@@ -77,11 +77,11 @@ jobs:
           SSHNPD_ATKEYS="$(tr '[:lower:]' '[:upper:]' <<< '${{ env.SSHNPD_ATSIGN }}')"
           echo "SSHNPD_ATKEYS=ATKEYS_${SSHNPD_ATKEYS:1}" >> $GITHUB_ENV
 
-      - name: Setup NP/NPD keys
-        working-directory: tests/end2end_tests/contexts
-        run: |
-          echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
-          echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
+      #- name: Setup NP/NPD keys
+        #working-directory: tests/end2end_tests/contexts
+        #run: |
+        # echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
+        #  echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
 
       - name: Set up entrypoints
         uses: ./.github/composite/setup_entrypoints
@@ -91,7 +91,7 @@ jobs:
           sshnpd: ${{ matrix.npd }}
           sshnpd_atsign: ${{ env.SSHNPD_ATSIGN }}
           srvd_atsign: ${{ env[env.PROD_RVD_ATSIGN] }}
-          devicename: ${{ env.DEVICENAME }}
+          #devicename: ${{ env.DEVICENAME }}
 
       - name: Ensure entrypoints exist
         working-directory: tests/end2end_tests/contexts
@@ -189,7 +189,7 @@ jobs:
       - name: Tear down
         # Always tear down outside of the act environment
         # but don't tear down on failure in the act environment
-        if: ${{ !env.ACT }} || success()
+        #if: ${{ !env.ACT }} || success()
         working-directory: tests/end2end_tests/tests
         run: |
           docker compose down
@@ -237,11 +237,11 @@ jobs:
           SSHNPD_ATKEYS="$(tr '[:lower:]' '[:upper:]' <<< '${{ env.SSHNPD_ATSIGN }}')"
           echo "SSHNPD_ATKEYS=ATKEYS_${SSHNPD_ATKEYS:1}" >> $GITHUB_ENV
 
-      - name: Setup NP/NPD keys
-        working-directory: tests/end2end_tests/contexts
-        run: |
-          echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
-          echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
+      #- name: Setup NP/NPD keys
+       # working-directory: tests/end2end_tests/contexts
+       # run: |
+        #  echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
+        #  echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
 
       - name: Set up entrypoints
         uses: ./.github/composite/setup_entrypoints
@@ -251,7 +251,7 @@ jobs:
           sshnpd: ${{ matrix.npd }}
           sshnpd_atsign: ${{ env.SSHNPD_ATSIGN }}
           srvd_atsign: ${{ env[env.PROD_RVD_ATSIGN] }}
-          devicename: ${{ env.DEVICENAME }}
+          #devicename: ${{ env.DEVICENAME }}
           args: "-P 55"
 
       - name: Ensure entrypoints exist
@@ -347,7 +347,7 @@ jobs:
       - name: Tear down
         # Always tear down outside of the act environment
         # but don't tear down on failure in the act environment
-        if: ${{ !env.ACT }} || success()
+        #if: ${{ !env.ACT }} || success()
         continue-on-error: true # failing this step does not fail the entire job
         working-directory: tests/end2end_tests/tests
         run: |
@@ -362,11 +362,11 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Devicename
+     # - name: Setup Devicename
         # First two guarantee a unique # per workflow call
         # Last two guarantee  a unique # per job per strategy in matrix
-        run: |
-          echo "DEVICENAME=${{ github.run_id }}${{ github.run_attempt }}4${{ strategy.job-index }}" >> $GITHUB_ENV
+       # run: |
+         # echo "DEVICENAME=${{ github.run_id }}${{ github.run_attempt }}4${{ strategy.job-index }}" >> $GITHUB_ENV
 
       - name: Setup NP/NPD key env
         run: |
@@ -376,17 +376,17 @@ jobs:
           SSHNPD_ATKEYS="$(tr '[:lower:]' '[:upper:]' <<< '${{ env.SSHNPD_ATSIGN }}')"
           echo "SSHNPD_ATKEYS=ATKEYS_${SSHNPD_ATKEYS:1}" >> $GITHUB_ENV
 
-      - name: Setup NP/NPD keys
-        working-directory: tests/end2end_tests/contexts
-        run: |
-          echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
-          echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
+     # - name: Setup NP/NPD keys
+      #  working-directory: tests/end2end_tests/contexts
+       # run: |
+        #  echo "${{ secrets[env.SSHNP_ATKEYS] }}" > sshnp/.atsign/keys/${{ env.SSHNP_ATSIGN }}_key.atKeys
+        #  echo "${{ secrets[env.SSHNPD_ATKEYS] }}" > sshnpd/.atsign/keys/${{ env.SSHNPD_ATSIGN }}_key.atKeys
 
-      - name: Set up entrypoints
-        working-directory: tests/end2end_tests/contexts/_init_
-        run: |
-          ./setup-sshnp-entrypoint.sh ${{ env.DEVICENAME }} ${{ env.SSHNP_ATSIGN }} ${{ env.SSHNPD_ATSIGN }} ${{ env[env.PROD_RVD_ATSIGN] }} sshnp_entrypoint.sh "-i ~/.ssh/id_ed25519 -s -v -P 55"
-          ./setup-sshnpd-entrypoint.sh ${{ env.DEVICENAME }} ${{ env.SSHNP_ATSIGN }} ${{ env.SSHNPD_ATSIGN }} sshnpd_entrypoint.sh
+     # - name: Set up entrypoints
+      #  working-directory: tests/end2end_tests/contexts/_init_
+      #  run: |
+        #  ./setup-sshnp-entrypoint.sh ${{ env.DEVICENAME }} ${{ env.SSHNP_ATSIGN }} ${{ env.SSHNPD_ATSIGN }} ${{ env[env.PROD_RVD_ATSIGN] }} sshnp_entrypoint.sh "-i ~/.ssh/id_ed25519 -s -v -P 55"
+        #  ./setup-sshnpd-entrypoint.sh ${{ env.DEVICENAME }} ${{ env.SSHNP_ATSIGN }} ${{ env.SSHNPD_ATSIGN }} sshnpd_entrypoint.sh
 
       - name: Ensure entrypoints exist
         working-directory: tests/end2end_tests/contexts
@@ -444,7 +444,7 @@ jobs:
       - name: Tear down
         # Always tear down outside of the act environment
         # but don't tear down on failure in the act environment
-        if: ${{ !env.ACT }} || success()
+       # if: ${{ !env.ACT }} || success()
         continue-on-error: true # failing this step does not fail the entire job
         working-directory: tests/end2end_tests/tests
         run: |
