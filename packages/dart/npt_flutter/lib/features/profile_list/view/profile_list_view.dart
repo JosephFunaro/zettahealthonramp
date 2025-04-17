@@ -118,8 +118,12 @@ class _ProfileListViewState extends State<ProfileListView> {
                                       gapW10,
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      const ProfileListImportButton(),
-                                      const AutoProfileFetcher(),
+                                      // Pass the TextEditingController to ProfileListImportButton
+                                      ProfileListImportButton(
+                                          textController: _searchController),
+                                      // Pass the TextEditingController to AutoProfileFetcher
+                                      AutoProfileFetcher(
+                                          textController: _searchController),
                                       //gapW10,
                                       //ProfileSelectedExportButton(),
                                       //gapW10,
@@ -153,8 +157,11 @@ class _ProfileListViewState extends State<ProfileListView> {
                                       gapW10,
                                       //ProfileListAddButton(),
                                       //gapW10,
-                                      const ProfileListImportButton(),
-                                      const AutoProfileFetcher()
+                                      ProfileListImportButton(
+                                          textController: _searchController),
+                                      // Pass the TextEditingController to AutoProfileFetcher
+                                      AutoProfileFetcher(
+                                          textController: _searchController),
                                     ],
                                   ),
                             gapH25,

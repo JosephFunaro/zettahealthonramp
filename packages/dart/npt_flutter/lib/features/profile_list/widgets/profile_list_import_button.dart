@@ -20,8 +20,11 @@ import 'package:npt_flutter/features/profile/bloc/profile_bloc.dart';
 import 'package:npt_flutter/features/profile/cubit/profile_cache_cubit.dart';
 
 class ProfileListImportButton extends StatelessWidget {
+  final TextEditingController textController;
+
   const ProfileListImportButton({
     super.key,
+    required this.textController,
   });
 
   @override
@@ -36,6 +39,9 @@ class ProfileListImportButton extends StatelessWidget {
 
         return ElevatedButton.icon(
           onPressed: () async {
+            // Clear the text field
+            textController.clear();
+
             // Capture dependencies at the start of the callback
             final profileCacheCubit = context.read<ProfileCacheCubit>();
             final profileListBloc = context.read<ProfileListBloc>();
@@ -71,7 +77,12 @@ class ProfileListImportButton extends StatelessWidget {
 }
 
 class AutoProfileFetcher extends StatefulWidget {
-  const AutoProfileFetcher({super.key});
+  final TextEditingController textController;
+
+  const AutoProfileFetcher({
+    super.key,
+    required this.textController,
+  });
 
   @override
   State<AutoProfileFetcher> createState() => _AutoProfileFetcherState();
@@ -98,6 +109,9 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     // Check for updates and fetch profiles initially
     bool isUpdateAvailable = await ProfileImportService().checkForUpdate(since);
     if (isUpdateAvailable) {
+      // Clear the text field
+      widget.textController.clear();
+
       await ProfileImportService()
           .stopRunningProfiles(profileCacheCubit, profileListBloc);
       await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
@@ -111,6 +125,9 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
       bool isUpdateAvailable =
           await ProfileImportService().checkForUpdate(since);
       if (isUpdateAvailable) {
+        // Clear the text field
+        widget.textController.clear();
+
         await ProfileImportService()
             .stopRunningProfiles(profileCacheCubit, profileListBloc);
         await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
