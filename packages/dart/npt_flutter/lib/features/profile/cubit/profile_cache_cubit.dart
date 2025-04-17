@@ -17,5 +17,17 @@ class ProfileCacheCubit extends LoggingCubit<ProfileCacheState> {
     return bloc;
   }
 
-  void clear() => emit(const ProfileCacheState({}));
+  void disposeProfileBloc(String uuid) {
+    if (state.profileBlocs.containsKey(uuid)) {
+      state.profileBlocs[uuid]?.close(); // Dispose of the ProfileBloc
+      emit(state.withRemoved(uuid)); // Remove it from the state
+    }
+  }
+
+  void clear() {
+    for (var bloc in state.profileBlocs.values) {
+      bloc.close(); // Dispose of all ProfileBloc instances
+    }
+    emit(const ProfileCacheState({}));
+  }
 }
