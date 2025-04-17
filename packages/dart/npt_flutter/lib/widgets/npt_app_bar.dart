@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+<<<<<<< HEAD
 //import 'package:npt_flutter/features/authorisation/widgets/authorisation_app_bar_button.dart';
 import 'package:npt_flutter/features/onboarding/util/pre_offboard.dart';
 import 'package:npt_flutter/pages/loading_page.dart';
+=======
+import 'package:npt_flutter/features/authorisation/widgets/authorisation_app_bar_button.dart';
+import 'package:npt_flutter/features/settings/repository/contact_repository.dart';
+>>>>>>> 6feb9e1cac0afe9b3445016103fda4cefd988204
 import 'package:npt_flutter/home_wrapper_widget.dart';
 import 'package:npt_flutter/pages/sub_nav_cubit.dart';
 import 'package:npt_flutter/routes.dart';
@@ -29,6 +34,7 @@ class _NptAppBarState extends State<NptAppBar> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
+    final atsign = ContactsService.getInstance().atClientManager.atClient.getCurrentAtSign();
     return BlocBuilder<SubNavCubit, String>(
       builder: (context, state) {
         final isDashboard = state == HomeRoutes.dashboard;
@@ -118,6 +124,7 @@ class _NptAppBarState extends State<NptAppBar> {
               ],
             ),
             actions: [
+<<<<<<< HEAD
               /*IgnorePointer(
                 ignoring: !isDashboard,
                 child: AnimatedOpacity(
@@ -125,6 +132,57 @@ class _NptAppBarState extends State<NptAppBar> {
                   curve: Curves.easeInOut,
                   opacity: isDashboard ? 1 : 0,
                   child: const AuthorisationAppBarButton(),
+=======
+              Container(
+                padding: const EdgeInsets.only(top: Sizes.p8, bottom: Sizes.p8, left: Sizes.p8, right: Sizes.p0),
+                decoration: BoxDecoration(
+                  color: AppColor.outlinePaddingColor,
+                  borderRadius: BorderRadius.circular(Sizes.p4),
+                ),
+                child: Row(
+                  children: [
+                    IgnorePointer(
+                      ignoring: !isDashboard,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        opacity: 1,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: Sizes.p8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(Sizes.p4),
+                          ),
+                          height: 40,
+                          child: Row(
+                            children: [
+                              Text(
+                                atsign != null ? '@' : '',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .copyWith(color: AppColor.primaryColor, fontSize: Sizes.p20),
+                              ),
+                              Text(
+                                atsign?.replaceFirst('@', '') ?? '',
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    IgnorePointer(
+                      ignoring: !isDashboard,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        opacity: isDashboard ? 1 : 0,
+                        child: const AuthorisationAppBarButton(),
+                      ),
+                    ),
+                  ],
+>>>>>>> 6feb9e1cac0afe9b3445016103fda4cefd988204
                 ),
               ),*/
               IgnorePointer(
