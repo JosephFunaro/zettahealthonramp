@@ -24,6 +24,12 @@ class ProfileCacheCubit extends LoggingCubit<ProfileCacheState> {
     }
   }
 
+  void disposeProfileBlocs(List<String> uuids) {
+    for (var uuid in uuids) {
+      disposeProfileBloc(uuid); // Reuse the existing method to dispose of each bloc
+    }
+  }
+
   void clear() {
     for (var bloc in state.profileBlocs.values) {
       bloc.close(); // Dispose of all ProfileBloc instances
@@ -31,3 +37,4 @@ class ProfileCacheCubit extends LoggingCubit<ProfileCacheState> {
     emit(const ProfileCacheState({}));
   }
 }
+

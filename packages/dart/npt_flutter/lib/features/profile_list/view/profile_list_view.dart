@@ -168,9 +168,12 @@ class _ProfileListViewState extends State<ProfileListView> {
                                         return BlocProvider<ProfileBloc>(
                                           key: Key(
                                               "ProfileListView-BlocProvider-${profiles[index]}"),
-                                          create: (context) => context
-                                              .read<ProfileCacheCubit>()
-                                              .getProfileBloc(profiles[index]),
+                                          create: (context) {
+                                            final cacheCubit = context
+                                                .read<ProfileCacheCubit>();
+                                            return cacheCubit.getProfileBloc(
+                                                profiles[index]);
+                                          },
                                           child: const CustomCard.profile(
                                               child: ProfileView()),
                                         );
