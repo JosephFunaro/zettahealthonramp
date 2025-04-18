@@ -121,7 +121,7 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     since = DateTime.now().toUtc().toString();
 
     // Start periodic fetching
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       bool isUpdateAvailable =
           await ProfileImportService().checkForUpdate(since);
       if (isUpdateAvailable) {
