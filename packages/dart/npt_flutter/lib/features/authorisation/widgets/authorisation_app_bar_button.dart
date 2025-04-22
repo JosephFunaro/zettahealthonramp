@@ -1,4 +1,4 @@
-/*import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,7 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/authorisation/cubit/pending_requests_count_cubit.dart';
 import 'package:npt_flutter/home_wrapper_widget.dart';
 import 'package:npt_flutter/routes.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+//import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class AuthorisationAppBarButton extends StatefulWidget {
@@ -39,7 +39,7 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
       },
       child: StreamBuilder(
         // TODO(zambrella): Implement the stream and make sure to cache it in init state
-        // stream: context.read<AuthorisationService>().enrollmentRequests(statusFilters: [EnrollmentStatus.pending]),
+        //stream: context.read<AuthorisationService>().enrollmentRequests(statusFilters: [EnrollmentStatus.pending]),
         stream: Stream.value(null),
         builder: (context, snapshot) {
           // TODO(zambrella): On new request, display a notification
@@ -48,7 +48,6 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
               return IconButton(
                 tooltip: strings.authorisation,
                 icon: Badge.count(
-<<<<<<< HEAD
                   count: authorisationNotificationCount.count,
                   isLabelVisible: authorisationNotificationCount.count > 0,
                   backgroundColor: Theme.of(context)
@@ -58,13 +57,6 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
                   textColor: Theme.of(context).colorScheme.primary,
                   child: const Icon(Icons.key_outlined),
                 ),
-=======
-                    count: authorisationNotificationCount.count,
-                    isLabelVisible: authorisationNotificationCount.count > 0,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    textColor: Theme.of(context).colorScheme.primary,
-                    child: PhosphorIcon(PhosphorIcons.key())),
->>>>>>> 6feb9e1cac0afe9b3445016103fda4cefd988204
                 onPressed: () {
                   wrapperNav.currentState!.pushNamed(HomeRoutes.authorisation);
                 },
@@ -75,4 +67,4 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
       ),
     );
   }
-}*/
+}

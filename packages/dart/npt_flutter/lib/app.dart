@@ -4,7 +4,7 @@ import 'package:at_onboarding_flutter/at_onboarding_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-//import 'package:npt_flutter/features/authorisation/cubit/pending_requests_count_cubit.dart';
+import 'package:npt_flutter/features/authorisation/cubit/pending_requests_count_cubit.dart';
 import 'package:npt_flutter/features/back_up_key/cubit/backup_key_cubit.dart';
 import 'package:npt_flutter/features/back_up_key/repository/backup_key_repository.dart';
 import 'package:npt_flutter/features/features.dart';
@@ -37,9 +37,9 @@ class App extends StatelessWidget {
         RepositoryProvider<FavoriteRepository>(
           create: (_) => FavoriteRepository(),
         ),
-        //RepositoryProvider<AuthorisationService>(
-        //create: (_) => AuthorisationService(),
-        //),
+        RepositoryProvider<AuthorisationService>(
+          create: (_) => AuthorisationService(),
+        ),
         RepositoryProvider<BackUpKeyRepository>(
             create: (_) => BackUpKeyRepository())
       ],
@@ -103,10 +103,10 @@ class App extends StatelessWidget {
           BlocProvider<FavoriteBloc>(
             create: (ctx) => FavoriteBloc(ctx.read<FavoriteRepository>()),
           ),
-          //BlocProvider<PendingRequestsCountCubit>(
-          //create: (ctx) =>
-          //PendingRequestsCountCubit(ctx.read<AuthorisationService>()),
-          //),
+          BlocProvider<PendingRequestsCountCubit>(
+            create: (ctx) =>
+                PendingRequestsCountCubit(ctx.read<AuthorisationService>()),
+          ),
 
           /// A cubit which tracks the sync status of the profiles
           BlocProvider<SyncCubit>(create: (_) => SyncCubit()),

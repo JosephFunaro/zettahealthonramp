@@ -18,7 +18,7 @@ class Routes {
 class HomeRoutes {
   static const dashboard = '/dashboard';
   static const settings = '/settings';
-  //static const authorisation = '/authorization';
+  static const authorisation = '/authorization';
   static const profileForm = '/profile';
   static const loadingPage = '/loading';
 
