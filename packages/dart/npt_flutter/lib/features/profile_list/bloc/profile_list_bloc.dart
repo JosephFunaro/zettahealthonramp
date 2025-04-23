@@ -30,11 +30,6 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     // Fetch the full profile objects
     final profileList = await _fetchProfiles();
 
-    if (profileList.isEmpty) {
-      emit(const ProfileListFailedLoad());
-      return;
-    }
-
     _allProfiles.clear();
     _allProfiles.addAll(profileList);
 

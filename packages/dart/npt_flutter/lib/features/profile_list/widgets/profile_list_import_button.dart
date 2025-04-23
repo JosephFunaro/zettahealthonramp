@@ -62,7 +62,7 @@ class ProfileListImportButton extends StatelessWidget {
                 profileListBloc.add(ProfileListAddEvent(guids));
               }
             } catch (e) {
-              debugPrint('Error fetching profiles: $e');
+              debugPrint('Error fetching profiles in button: $e');
               // Optionally show a snackbar or error UI
             }
           },
@@ -145,7 +145,7 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
       profileListBloc.add(ProfileListDeleteEvent(toDelete: selected));
       profileListBloc.add(ProfileListAddEvent(guids));
     } catch (e) {
-      debugPrint('Error fetching profiles: $e');
+      debugPrint('Error fetching profiles automatically: $e');
     }
   }
 
@@ -203,7 +203,7 @@ class ProfileImportService {
     final accessToken = parts[1];
     final getResponse = await http.post(
       Uri.parse(
-          'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
+          'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
       headers: <String, String>{
         'access_token': decrypt(
             guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
