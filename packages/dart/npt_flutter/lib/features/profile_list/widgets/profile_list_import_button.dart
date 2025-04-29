@@ -175,7 +175,7 @@ class ProfileImportService {
     final guid = parts[0];
     final checkResponse = await http.get(
         Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
+            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
         headers: <String, String>{'Content-Type': 'text/plain'});
     if (checkResponse.statusCode == 200) {
       dynamic dataBody = jsonDecode(checkResponse.body);
