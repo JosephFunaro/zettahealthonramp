@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/profile/models/profile.dart';
+import 'package:npt_flutter/features/profile/widgets/profile_run_button.dart';
 //import 'package:npt_flutter/util/export.dart';
 //import 'package:npt_flutter/widgets/multi_select_dialog.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -246,20 +247,75 @@ class ProfileImportService {
   Future<void> stopRunningProfiles(ProfileCacheCubit profileCacheCubit,
       ProfileListBloc profileListBloc) async {
     try {
+      // Clear the payload data list
+      ProfileUpdateService().clearPayloadData();
+
+      // Read access data from the file
+      final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
+      final content = await accessDataFile.readAsString();
+      final parts = content.trim().split(' ');
+
+      if (parts.length != 2) {
+        throw Exception('Invalid format in accessdata.txt');
+      }
+      final guid = parts[0];
+      final accessToken = parts[1];
+
       if (profileListBloc.state is! ProfileListLoaded) return;
 
       final profiles = (profileListBloc.state as ProfileListLoaded).profiles;
 
+      // Prepare the AsClient list for the payload
+      final List<Map<String, dynamic>> asClientList = [];
+
       for (final uuid in profiles) {
         final profileBloc = profileCacheCubit.getProfileBloc(uuid);
 
-        if (profileBloc.state is ProfileStarted) {
-          profileBloc.add(const ProfileStopEvent());
-          debugPrint("$uuid is being stopped!");
+        // Check the state of the ProfileBloc to retrieve the Profile object
+        if (profileBloc.state is ProfileLoadedState) {
+          final profile = (profileBloc.state as ProfileLoadedState).profile;
+
+          // Get the serverClientGUID from the Profile object
+          final serverClientGUID = profile.serverClientGUID;
+
+          // Add the serverClientGUID to the AsClient list
+          asClientList.add({
+            "ServerClientGUID": serverClientGUID,
+          });
+
+          if (profileBloc.state is ProfileStarted) {
+            profileBloc.add(const ProfileStopEvent());
+            debugPrint("$uuid is being stopped!");
+          } else {
+            debugPrint(
+                "$uuid is not running. Current state: ${profileBloc.state}");
+          }
         } else {
-          debugPrint(
-              "$uuid is not running. Current state: ${profileBloc.state}");
+          debugPrint("Profile not found or not loaded for UUID: $uuid");
         }
+      }
+
+      // Prepare the payload data
+      Map payloadData = {
+        "AsClient": asClientList,
+        "AsServer": [{}]
+      };
+
+      final response = await http.post(
+        Uri.parse(
+            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
+        headers: <String, String>{
+          'access_token': decrypt(
+              guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: json.encode(payloadData),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to send connection status: ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('Error stopping running profiles: $e');

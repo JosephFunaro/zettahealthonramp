@@ -169,6 +169,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                             isFullProfile
                                 ? Expanded(
                                     child: ListView.builder(
+                                      addAutomaticKeepAlives: false,
+                                      addRepaintBoundaries: false,
                                       itemCount: state.profiles.length,
                                       itemBuilder: (context, index) {
                                         final cacheCubit =

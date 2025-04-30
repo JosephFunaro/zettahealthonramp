@@ -123,6 +123,15 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
 }
 
 class ProfileUpdateService {
+  // Static list to persist payload data for the entire runtime
+  static final List<Map<String, dynamic>> _payloadDataList = [];
+
+  // Method to clear the payload data list
+  void clearPayloadData() {
+    _payloadDataList.clear();
+    debugPrint("Payload data list cleared.");
+  }
+
   Future<void> updateProfileStatus(
       bool isSuccess, String serverClientGUID) async {
     // Read access data from the file
@@ -137,16 +146,32 @@ class ProfileUpdateService {
     final accessToken = parts[1];
 
     try {
+      // Check if the ServerClientGUID already exists in the list
+      final existingEntry = _payloadDataList.firstWhere(
+        (entry) => entry['ServerClientGUID'] == serverClientGUID,
+        orElse: () => {},
+      );
+
+      if (existingEntry.isNotEmpty) {
+        // Update the existing entry
+        existingEntry['Success'] = isSuccess;
+        existingEntry['Message'] = isSuccess
+            ? "Client successfully started!"
+            : "Issue occurred when starting client.";
+      } else {
+        // Add a new entry
+        _payloadDataList.add({
+          "ServerClientGUID": serverClientGUID,
+          "Success": isSuccess,
+          "Message": isSuccess
+              ? "Client successfully started!"
+              : "Issue occurred when starting client."
+        });
+      }
+
+      // Prepare the payload data
       Map payloadData = {
-        "AsClient": [
-          {
-            "ServerClientGUID": serverClientGUID,
-            "Success": isSuccess,
-            "Message": isSuccess
-                ? "Client successfully started!"
-                : "Issue occurred when starting client."
-          }
-        ],
+        "AsClient": _payloadDataList,
         "AsServer": [{}]
       };
 
