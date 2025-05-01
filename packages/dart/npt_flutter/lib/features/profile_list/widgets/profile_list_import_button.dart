@@ -206,7 +206,7 @@ class ProfileImportService {
     debugPrint('CALLING CHECK FOR UPDATE: $guid $since');
     final checkResponse = await http.get(
         Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
+            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
         headers: <String, String>{'Content-Type': 'text/plain'});
     if (checkResponse.statusCode == 200) {
       dynamic dataBody = jsonDecode(checkResponse.body);
@@ -235,7 +235,7 @@ class ProfileImportService {
     final accessToken = parts[1];
     final getResponse = await http.post(
       Uri.parse(
-          'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
+          'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
       headers: <String, String>{
         'access_token': decrypt(
             guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
@@ -345,7 +345,7 @@ class ProfileImportService {
 
       final response = await http.post(
         Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
+            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
         headers: <String, String>{
           'access_token': decrypt(
               guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
