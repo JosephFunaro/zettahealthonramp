@@ -177,7 +177,7 @@ class ProfileUpdateService {
 
       final response = await http.post(
         Uri.parse(
-            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
+            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
         headers: <String, String>{
           'access_token': decrypt(
               guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),

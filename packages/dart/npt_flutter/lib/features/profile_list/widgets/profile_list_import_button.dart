@@ -13,76 +13,86 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:npt_flutter/features/profile_list/bloc/profile_list_bloc.dart';
 //import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../styles/sizes.dart';
+//import '../../../styles/sizes.dart';
 import '../cubit/profiles_selected_cubit.dart';
 import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
 import 'package:npt_flutter/features/profile/bloc/profile_bloc.dart';
 import 'package:npt_flutter/features/profile/cubit/profile_cache_cubit.dart';
 
-class ProfileListImportButton extends StatelessWidget {
+class ProfileListImportButton extends StatefulWidget {
   final TextEditingController textController;
+  final VoidCallback onStartRefresh; // Callback to notify when refresh starts
+  final VoidCallback onEndRefresh; // Callback to notify when refresh ends
 
   const ProfileListImportButton({
     super.key,
     required this.textController,
+    required this.onStartRefresh,
+    required this.onEndRefresh,
   });
 
   @override
+  State<ProfileListImportButton> createState() =>
+      _ProfileListImportButtonState();
+}
+
+class _ProfileListImportButtonState extends State<ProfileListImportButton> {
+  @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    return BlocSelector<ProfilesSelectedCubit, ProfilesSelectedState,
-        Set<String>>(
-      selector: (state) => state.selected,
-      builder: (BuildContext context, Set<String> selected) {
-        // Hide this button if something is selected
-        if (selected.isNotEmpty) return gap0;
 
-        return ElevatedButton.icon(
-          onPressed: () async {
-            // Clear the text field
-            textController.clear();
+    return ElevatedButton.icon(
+      onPressed: () async {
+        widget.onStartRefresh(); // Notify parent that refresh has started
 
-            // Capture dependencies at the start of the callback
-            final profileCacheCubit = context.read<ProfileCacheCubit>();
-            final profileListBloc = context.read<ProfileListBloc>();
+        // Clear the text field
+        widget.textController.clear();
 
-            try {
-              // Stop running profiles
-              await ProfileImportService()
-                  .stopRunningProfiles(profileCacheCubit, profileListBloc);
+        // Capture dependencies at the start of the callback
+        final profileCacheCubit = context.read<ProfileCacheCubit>();
+        final profileListBloc = context.read<ProfileListBloc>();
 
-              // Fetch and import new profiles
-              final guids = await ProfileImportService().fetchProfileGuids(
-                DateTime(1900, 1, 1, 0, 0, 0).toString(),
-              );
+        try {
+          // Stop running profiles
+          await ProfileImportService()
+              .stopRunningProfiles(profileCacheCubit, profileListBloc);
 
-              // Use context.mounted to ensure the widget is still in the tree
-              if (context.mounted) {
-                profileListBloc.add(ProfileListDeleteEvent(toDelete: selected));
-                profileListBloc.add(ProfileListAddEvent(guids));
-              }
-            } catch (e) {
-              debugPrint('Error fetching profiles in button: $e');
-              // Optionally show a snackbar or error UI
-            }
-          },
-          label: Text(strings.import),
-          icon: PhosphorIcon(
-            PhosphorIcons.arrowClockwise(),
-          ),
-        );
+          // Fetch and import new profiles
+          final guids = await ProfileImportService().fetchProfileGuids(
+            DateTime(1900, 1, 1, 0, 0, 0).toString(),
+          );
+
+          // Use context.mounted to ensure the widget is still in the tree
+          if (context.mounted) {
+            profileListBloc.add(const ProfileListDeleteEvent(toDelete: {}));
+            profileListBloc.add(ProfileListAddEvent(guids));
+          }
+        } catch (e) {
+          debugPrint('Error fetching profiles in button: $e');
+          // Optionally show a snackbar or error UI
+        } finally {
+          widget.onEndRefresh(); // Notify parent that refresh has ended
+        }
       },
+      label: Text(strings.import),
+      icon: PhosphorIcon(
+        PhosphorIcons.arrowClockwise(),
+      ),
     );
   }
 }
 
 class AutoProfileFetcher extends StatefulWidget {
   final TextEditingController textController;
+  final VoidCallback onStartRefresh; // Callback to notify when refresh starts
+  final VoidCallback onEndRefresh; // Callback to notify when refresh ends
 
   const AutoProfileFetcher({
     super.key,
     required this.textController,
+    required this.onStartRefresh,
+    required this.onEndRefresh,
   });
 
   @override
@@ -107,16 +117,24 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 
     String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
 
-    // Check for updates and fetch profiles initially
-    bool isUpdateAvailable = await ProfileImportService().checkForUpdate(since);
-    if (isUpdateAvailable) {
-      // Clear the text field
-      widget.textController.clear();
+    // Perform the first refresh immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        widget.onStartRefresh(); // Notify parent that refresh has started
+        debugPrint('AUTO FETCH STARTED IMMEDIATELY! TIME: $since');
 
-      await ProfileImportService()
-          .stopRunningProfiles(profileCacheCubit, profileListBloc);
-      await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
-    }
+        // Clear the text field
+        widget.textController.clear();
+
+        await ProfileImportService()
+            .stopRunningProfiles(profileCacheCubit, profileListBloc);
+        await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
+      } catch (e) {
+        debugPrint('Error during immediate refresh: $e');
+      } finally {
+        widget.onEndRefresh(); // Notify parent that refresh has ended
+      }
+    });
 
     // Update the "since" timestamp
     since = DateTime.now().toUtc().toString();
@@ -125,15 +143,26 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       bool isUpdateAvailable =
           await ProfileImportService().checkForUpdate(since);
+      debugPrint('AUTO FETCH CHECK FOR UPDATE: $isUpdateAvailable $since');
       if (isUpdateAvailable) {
-        // Clear the text field
-        widget.textController.clear();
+        widget.onStartRefresh(); // Notify parent that refresh has started
+        debugPrint('AUTO FETCH STARTED! TIME: $since');
+        try {
+          // Clear the text field
+          widget.textController.clear();
 
-        await ProfileImportService()
-            .stopRunningProfiles(profileCacheCubit, profileListBloc);
-        await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
+          await ProfileImportService()
+              .stopRunningProfiles(profileCacheCubit, profileListBloc);
+          await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
+        } catch (e) {
+          debugPrint('Error during automatic refresh: $e');
+        } finally {
+          widget.onEndRefresh(); // Notify parent that refresh has ended
+        }
       }
-      since = DateTime.now().toUtc().toString(); // Update the "since" timestamp
+
+      // Update the "since" timestamp
+      since = DateTime.now().toUtc().toString();
     });
   }
 
@@ -174,12 +203,14 @@ class ProfileImportService {
       throw Exception('Invalid format in accessdata.txt');
     }
     final guid = parts[0];
+    debugPrint('CALLING CHECK FOR UPDATE: $guid $since');
     final checkResponse = await http.get(
         Uri.parse(
-            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
+            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
         headers: <String, String>{'Content-Type': 'text/plain'});
     if (checkResponse.statusCode == 200) {
       dynamic dataBody = jsonDecode(checkResponse.body);
+      debugPrint('CHECK FOR UPDATE RESPONSE: $dataBody');
       if (dataBody == 1) {
         return true;
       } else {
@@ -204,7 +235,7 @@ class ProfileImportService {
     final accessToken = parts[1];
     final getResponse = await http.post(
       Uri.parse(
-          'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
+          'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
       headers: <String, String>{
         'access_token': decrypt(
             guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
@@ -283,6 +314,17 @@ class ProfileImportService {
             "ServerClientGUID": serverClientGUID,
           });
 
+          // Check if the profile is in the starting state
+          if (profileBloc.state is ProfileStarting) {
+            debugPrint(
+                "$uuid is in the starting state. Waiting for it to start...");
+            await Future.doWhile(() async {
+              await Future.delayed(const Duration(seconds: 1));
+              return profileBloc.state is ProfileStarting;
+            });
+            debugPrint("$uuid has transitioned out of the starting state.");
+          }
+
           if (profileBloc.state is ProfileStarted) {
             profileBloc.add(const ProfileStopEvent());
             debugPrint("$uuid is being stopped!");
@@ -303,7 +345,7 @@ class ProfileImportService {
 
       final response = await http.post(
         Uri.parse(
-            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
+            'https://imvirtusinc-dev.outsystemsenterprise.com/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
         headers: <String, String>{
           'access_token': decrypt(
               guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),

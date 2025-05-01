@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -25,13 +23,14 @@ class ProfileListView extends StatefulWidget {
 
 class _ProfileListViewState extends State<ProfileListView> {
   final TextEditingController _searchController = TextEditingController();
+  bool _isRefreshing = false; // Add a state variable to track refreshing status
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  @override
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -57,185 +56,257 @@ class _ProfileListViewState extends State<ProfileListView> {
     final deviceSize = MediaQuery.of(context).size;
     final bodyMedium = Theme.of(context).textTheme.bodyMedium;
     SizeConfig().init();
-    return BlocBuilder<ProfileListBloc, ProfileListState>(
-        builder: (context, state) {
-      return switch (state) {
-        ProfileListInitial() ||
-        ProfileListLoading() =>
-          const Center(child: Spinner()),
-        ProfileListFailedLoad() => const ProfileListFailedLoadContent(),
-        ProfileListLoaded() => BlocBuilder<ProfileListBloc, ProfileListState>(
-              builder: (BuildContext context, ProfileListState state) {
-            if (state is! ProfileListLoaded) {
-              // These states should be handled by the ancestor
-              return gap0;
-            }
 
-            final profiles = state.profiles.toList();
-            final isFullProfile = profiles.isNotEmpty;
-            log('profile: isFullProfile: $isFullProfile');
+    return Stack(
+      children: [
+        BlocBuilder<ProfileListBloc, ProfileListState>(
+          builder: (context, state) {
+            return switch (state) {
+              ProfileListInitial() ||
+              ProfileListLoading() =>
+                const Center(child: Spinner()),
+              ProfileListFailedLoad() => const ProfileListFailedLoadContent(),
+              ProfileListLoaded() =>
+                BlocBuilder<ProfileListBloc, ProfileListState>(
+                    builder: (BuildContext context, ProfileListState state) {
+                  if (state is! ProfileListLoaded) {
+                    return gap0;
+                  }
 
-            return Stack(
-              children: [
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  final profiles = state.profiles.toList();
+                  final isFullProfile = profiles.isNotEmpty;
+
+                  return Stack(
                     children: [
-                      CustomCard.dashboardContent(
-                        height:
-                            deviceSize.height * Sizes.dashboardCardHeightFactor,
-                        width: SizeConfig.setDashboardWidth(),
+                      Align(
+                        alignment: Alignment.topCenter,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            isFullProfile
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      // Add the search text field
-                                      Expanded(
-                                        flex: 2,
-                                        child: TextField(
-                                          controller: _searchController,
-                                          decoration: InputDecoration(
-                                            hintText: strings.searchProfiles,
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
+                            CustomCard.dashboardContent(
+                              height: deviceSize.height *
+                                  Sizes.dashboardCardHeightFactor,
+                              width: SizeConfig.setDashboardWidth(),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  isFullProfile
+                                      ? Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: TextField(
+                                                controller: _searchController,
+                                                decoration: InputDecoration(
+                                                  hintText:
+                                                      strings.searchProfiles,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                  ),
+                                                  prefixIcon:
+                                                      const Icon(Icons.search),
+                                                ),
+                                                onChanged: (value) {
+                                                  context
+                                                      .read<ProfileListBloc>()
+                                                      .add(
+                                                          ProfileListFilterEvent(
+                                                              filterText:
+                                                                  value));
+                                                },
+                                              ),
                                             ),
-                                            prefixIcon:
-                                                const Icon(Icons.search),
-                                          ),
-                                          onChanged: (value) {
-                                            context.read<ProfileListBloc>().add(
-                                                ProfileListFilterEvent(
-                                                    filterText: value));
-                                          },
-                                        ),
-                                      ),
-                                      gapW10,
-                                      //ProfileListAddButton(),
-                                      //gapW10,
-                                      // Pass the TextEditingController to ProfileListImportButton
-                                      ProfileListImportButton(
-                                          textController: _searchController),
-                                      // Pass the TextEditingController to AutoProfileFetcher
-                                      AutoProfileFetcher(
-                                          textController: _searchController),
-                                      //gapW10,
-                                      //ProfileSelectedExportButton(),
-                                      //gapW10,
-                                      //ProfileSelectedDeleteButton(),
-                                    ],
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      // Add the search text field
-                                      Expanded(
-                                        flex: 2,
-                                        child: TextField(
-                                          controller: _searchController,
-                                          decoration: InputDecoration(
-                                            hintText: strings.searchProfiles,
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
+                                            gapW10,
+                                            ProfileListImportButton(
+                                              textController: _searchController,
+                                              onStartRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = true;
+                                                });
+                                              },
+                                              onEndRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = false;
+                                                });
+                                              },
                                             ),
-                                            prefixIcon:
-                                                const Icon(Icons.search),
-                                          ),
-                                          onChanged: (value) {
-                                            context.read<ProfileListBloc>().add(
-                                                ProfileListFilterEvent(
-                                                    filterText: value));
-                                          },
+                                            AutoProfileFetcher(
+                                              textController: _searchController,
+                                              onStartRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = true;
+                                                });
+                                              },
+                                              onEndRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = false;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: TextField(
+                                                controller: _searchController,
+                                                decoration: InputDecoration(
+                                                  hintText:
+                                                      strings.searchProfiles,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                  ),
+                                                  prefixIcon:
+                                                      const Icon(Icons.search),
+                                                ),
+                                                onChanged: (value) {
+                                                  context
+                                                      .read<ProfileListBloc>()
+                                                      .add(
+                                                          ProfileListFilterEvent(
+                                                              filterText:
+                                                                  value));
+                                                },
+                                              ),
+                                            ),
+                                            gapW10,
+                                            ProfileListImportButton(
+                                              textController: _searchController,
+                                              onStartRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = true;
+                                                });
+                                              },
+                                              onEndRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = false;
+                                                });
+                                              },
+                                            ),
+                                            AutoProfileFetcher(
+                                              textController: _searchController,
+                                              onStartRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = true;
+                                                });
+                                              },
+                                              onEndRefresh: () {
+                                                setState(() {
+                                                  _isRefreshing = false;
+                                                });
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      gapW10,
-                                      //ProfileListAddButton(),
-                                      //gapW10,
-                                      ProfileListImportButton(
-                                          textController: _searchController),
-                                      // Pass the TextEditingController to AutoProfileFetcher
-                                      AutoProfileFetcher(
-                                          textController: _searchController),
-                                    ],
-                                  ),
-                            gapH25,
-                            isFullProfile ? const ProfileHeaderView() : gap0,
-                            isFullProfile
-                                ? Expanded(
-                                    child: ListView.builder(
-                                      addAutomaticKeepAlives: false,
-                                      addRepaintBoundaries: false,
-                                      itemCount: state.profiles.length,
-                                      itemBuilder: (context, index) {
-                                        final cacheCubit =
-                                            context.read<ProfileCacheCubit>();
-                                        final profileBloc = cacheCubit
-                                            .getProfileBloc(profiles[index]);
+                                  gapH25,
+                                  isFullProfile
+                                      ? const ProfileHeaderView()
+                                      : gap0,
+                                  isFullProfile
+                                      ? Expanded(
+                                          child: ListView.builder(
+                                            addAutomaticKeepAlives: false,
+                                            addRepaintBoundaries: false,
+                                            itemCount: state.profiles.length,
+                                            itemBuilder: (context, index) {
+                                              final cacheCubit = context
+                                                  .read<ProfileCacheCubit>();
+                                              final profileBloc =
+                                                  cacheCubit.getProfileBloc(
+                                                      profiles[index]);
 
-                                        return CustomCard.profile(
-                                          child: BlocProvider.value(
-                                            value: profileBloc,
-                                            child: const ProfileView(),
+                                              return CustomCard.profile(
+                                                child: BlocProvider.value(
+                                                  value: profileBloc,
+                                                  child: const ProfileView(),
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  )
-                                : Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Align(
-                                        alignment: Alignment.center,
-                                        child: SvgPicture.asset(
-                                            'assets/empty_state_profile_bg.svg'),
-                                      ),
-                                      Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: Text(
-                                          strings.emptyProfileMessage,
-                                          style: bodyMedium?.copyWith(
-                                              fontSize: Sizes.p16),
-                                          textAlign: TextAlign.center,
+                                        )
+                                      : Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Align(
+                                              alignment: Alignment.center,
+                                              child: SvgPicture.asset(
+                                                  'assets/empty_state_profile_bg.svg'),
+                                            ),
+                                            Align(
+                                              alignment: Alignment.bottomCenter,
+                                              child: Text(
+                                                strings.emptyProfileMessage,
+                                                style: bodyMedium?.copyWith(
+                                                    fontSize: Sizes.p16),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      )
-                                    ],
-                                  ),
-                            BlocBuilder<SyncCubit, bool>(
-                                buildWhen: (previous, current) {
-                              log('previous: $previous, current: $current');
-                              return previous != current;
-                            }, builder: (context, state) {
-                              if (state is ProfileListLoading) {
-                                return Column(
-                                  children: [
-                                    isFullProfile ? gapH25 : gap0,
-                                    Text(
-                                      strings.syncInProgress,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                );
-                              }
-                              log('gap 0 called');
-                              return gap0;
-                            }),
-                            gapH25,
+                                  BlocBuilder<SyncCubit, bool>(
+                                      buildWhen: (previous, current) {
+                                    return previous != current;
+                                  }, builder: (context, state) {
+                                    if (state is ProfileListLoading) {
+                                      return Column(
+                                        children: [
+                                          isFullProfile ? gapH25 : gap0,
+                                          Text(
+                                            strings.syncInProgress,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      );
+                                    }
+                                    return gap0;
+                                  }),
+                                  gapH25,
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ],
-                  ),
+                  );
+                }),
+            };
+          },
+        ),
+        if (_isRefreshing)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Refreshing Profiles... Please wait...",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.white),
+                    ),
+                  ],
                 ),
-              ],
-            );
-          }),
-      };
-    });
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
