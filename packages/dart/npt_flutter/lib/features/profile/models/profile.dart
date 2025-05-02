@@ -125,6 +125,24 @@ final class Profile extends Loggable with Favoritable {
     );
   }
 
+  static Profile empty() {
+    return const Profile(
+      '',
+      displayName: '',
+      relayAtsign: '',
+      sshnpdAtsign: '',
+      deviceName: '',
+      friendlyName: '',
+      startUpOption: '',
+      remotePort: 0,
+      localPort: 0,
+      serverClientGUID: '',
+    );
+  }
+
+  bool get isNotEmpty =>
+      uuid.isNotEmpty; // Helper to check if the profile is not empty
+
   @override
   String toString() {
     return 'Profile(displayName: $displayName, sshnpd: $sshnpdAtsign, '

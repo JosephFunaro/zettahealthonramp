@@ -52,21 +52,22 @@ class _ProfileListImportButtonState extends State<ProfileListImportButton> {
         // Capture dependencies at the start of the callback
         final profileCacheCubit = context.read<ProfileCacheCubit>();
         final profileListBloc = context.read<ProfileListBloc>();
+        final autoFetcherState =
+            context.findAncestorStateOfType<_AutoProfileFetcherState>();
 
         try {
-          // Stop running profiles
-          await ProfileImportService()
-              .stopRunningProfiles(profileCacheCubit, profileListBloc);
-
-          // Fetch and import new profiles
-          final guids = await ProfileImportService().fetchProfileGuids(
+          // Fetch new profiles
+          final newProfiles = await ProfileImportService().fetchProfileGuids(
             DateTime(1900, 1, 1, 0, 0, 0).toString(),
           );
 
-          // Use context.mounted to ensure the widget is still in the tree
-          if (context.mounted) {
-            profileListBloc.add(const ProfileListDeleteEvent(toDelete: {}));
-            profileListBloc.add(ProfileListAddEvent(guids));
+          // Sync profiles
+          await ProfileImportService()
+              .syncProfiles(newProfiles, profileCacheCubit, profileListBloc);
+
+          // Update the "since" variable in the automatic fetcher
+          if (autoFetcherState != null) {
+            autoFetcherState.updateSince(DateTime.now().toUtc().toString());
           }
         } catch (e) {
           debugPrint('Error fetching profiles in button: $e');
@@ -101,6 +102,7 @@ class AutoProfileFetcher extends StatefulWidget {
 
 class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
   Timer? _timer;
+  String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
 
   @override
   void initState() {
@@ -111,11 +113,9 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 
   void _startAutoFetch() async {
     // Capture dependencies at the start of the method
-    final profileCacheCubit = context.read<ProfileCacheCubit>();
+    context.read<ProfileCacheCubit>();
     final profileListBloc = context.read<ProfileListBloc>();
     final profilesSelectedCubit = context.read<ProfilesSelectedCubit>();
-
-    String since = DateTime(1900, 1, 1, 0, 0, 0).toString();
 
     // Perform the first refresh immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -126,8 +126,6 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
         // Clear the text field
         widget.textController.clear();
 
-        await ProfileImportService()
-            .stopRunningProfiles(profileCacheCubit, profileListBloc);
         await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
       } catch (e) {
         debugPrint('Error during immediate refresh: $e');
@@ -151,8 +149,6 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
           // Clear the text field
           widget.textController.clear();
 
-          await ProfileImportService()
-              .stopRunningProfiles(profileCacheCubit, profileListBloc);
           await _fetchProfiles(since, profileListBloc, profilesSelectedCubit);
         } catch (e) {
           debugPrint('Error during automatic refresh: $e');
@@ -168,15 +164,22 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
 
   Future<void> _fetchProfiles(String since, ProfileListBloc profileListBloc,
       ProfilesSelectedCubit profilesSelectedCubit) async {
-    try {
-      final guids = await ProfileImportService().fetchProfileGuids(since);
-      final selected = profilesSelectedCubit.state.selected;
+    final profileCacheCubit = context.read<ProfileCacheCubit>();
 
-      profileListBloc.add(ProfileListDeleteEvent(toDelete: selected));
-      profileListBloc.add(ProfileListAddEvent(guids));
+    try {
+      // Fetch new profiles
+      final newProfiles = await ProfileImportService().fetchProfileGuids(since);
+
+      // Sync profiles
+      await ProfileImportService()
+          .syncProfiles(newProfiles, profileCacheCubit, profileListBloc);
     } catch (e) {
       debugPrint('Error fetching profiles automatically: $e');
     }
+  }
+
+  void updateSince(String newSince) {
+    since = newSince;
   }
 
   @override
@@ -275,99 +278,144 @@ class ProfileImportService {
     }
   }
 
-  Future<void> stopRunningProfiles(ProfileCacheCubit profileCacheCubit,
-      ProfileListBloc profileListBloc) async {
-    try {
-      // Clear the payload data list
-      ProfileUpdateService().clearPayloadData();
-
-      // Read access data from the file
-      final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
-      final content = await accessDataFile.readAsString();
-      final parts = content.trim().split(' ');
-
-      if (parts.length != 2) {
-        throw Exception('Invalid format in accessdata.txt');
-      }
-      final guid = parts[0];
-      final accessToken = parts[1];
-
-      if (profileListBloc.state is! ProfileListLoaded) return;
-
-      final profiles = (profileListBloc.state as ProfileListLoaded).profiles;
-
-      // Prepare the AsClient list for the payload
-      final List<Map<String, dynamic>> asClientList = [];
-
-      for (final uuid in profiles) {
-        final profileBloc = profileCacheCubit.getProfileBloc(uuid);
-
-        // Check the state of the ProfileBloc to retrieve the Profile object
-        if (profileBloc.state is ProfileLoadedState) {
-          final profile = (profileBloc.state as ProfileLoadedState).profile;
-
-          // Get the serverClientGUID from the Profile object
-          final serverClientGUID = profile.serverClientGUID;
-
-          // Add the serverClientGUID to the AsClient list
-          asClientList.add({
-            "ServerClientGUID": serverClientGUID,
-          });
-
-          // Check if the profile is in the starting state
-          if (profileBloc.state is ProfileStarting) {
-            debugPrint(
-                "$uuid is in the starting state. Waiting for it to start...");
-            await Future.doWhile(() async {
-              await Future.delayed(const Duration(seconds: 1));
-              return profileBloc.state is ProfileStarting;
-            });
-            debugPrint("$uuid has transitioned out of the starting state.");
-          }
-
-          if (profileBloc.state is ProfileStarted) {
-            profileBloc.add(const ProfileStopEvent());
-            debugPrint("$uuid is being stopped!");
-          } else {
-            debugPrint(
-                "$uuid is not running. Current state: ${profileBloc.state}");
-          }
-        } else {
-          debugPrint("Profile not found or not loaded for UUID: $uuid");
-        }
-      }
-
-      // Prepare the payload data
-      Map payloadData = {
-        "AsClient": asClientList,
-        "AsServer": [{}]
-      };
-
-      final response = await http.post(
-        Uri.parse(
-            'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
-        headers: <String, String>{
-          'access_token': decrypt(
-              guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: json.encode(payloadData),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Failed to send connection status: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error stopping running profiles: $e');
-    }
-  }
-
   String decrypt(String keyString, crypt.Encrypted encryptedData) {
     final key = crypt.Key.fromUtf8(keyString);
     final encrypter = crypt.Encrypter(crypt.AES(key, mode: crypt.AESMode.cbc));
     final initVector = crypt.IV.fromUtf8(keyString.substring(0, 16));
     return encrypter.decrypt(encryptedData, iv: initVector);
+  }
+
+  Future<void> syncProfiles(
+      List<Profile> newProfiles,
+      ProfileCacheCubit profileCacheCubit,
+      ProfileListBloc profileListBloc) async {
+    debugPrint("Starting syncProfiles...");
+
+    if (profileListBloc.state is! ProfileListLoaded) {
+      debugPrint(
+          "ProfileListBloc state is not ProfileListLoaded. Exiting syncProfiles.");
+      return;
+    }
+
+    // Retrieve the list of existing profile UUIDs
+    final existingProfileUUIDs =
+        (profileListBloc.state as ProfileListLoaded).profiles;
+    debugPrint("Existing profile UUIDs: $existingProfileUUIDs");
+
+    // Retrieve the actual Profile objects for the existing UUIDs
+    final existingProfiles = existingProfileUUIDs
+        .map((uuid) {
+          final profileBloc = profileCacheCubit.getProfileBloc(uuid);
+          if (profileBloc.state is ProfileLoadedState) {
+            debugPrint("Loaded profile for UUID: $uuid");
+            return (profileBloc.state as ProfileLoadedState).profile;
+          }
+          debugPrint("Profile for UUID $uuid is not in ProfileLoadedState.");
+          return null;
+        })
+        .whereType<Profile>() // Filter out null values
+        .toList();
+    debugPrint("Existing profiles: $existingProfiles");
+
+    // Prepare lists for profiles to add and delete
+    final List<Profile> profilesToAdd = [];
+    final List<Profile> profilesToKeep = [];
+    final List<Profile> profilesToDelete = [];
+
+    // Step 1: Compare new profiles with existing profiles
+    for (final newProfile in newProfiles) {
+      final matchingProfile = existingProfiles.firstWhere(
+          (existingProfile) =>
+              _areProfilesEqualIgnoringGUID(newProfile, existingProfile),
+          orElse: () => Profile.empty());
+
+      if (matchingProfile.isNotEmpty) {
+        debugPrint(
+            "Duplicate profile found: ${newProfile.serverClientGUID}. Skipping.");
+        profilesToKeep.add(matchingProfile); // Keep the existing profile
+        continue; // Do nothing for duplicates
+      }
+
+      // If not a duplicate, add to the list of profiles to add
+      debugPrint("New profile to add: ${newProfile.serverClientGUID}");
+      profilesToAdd.add(newProfile);
+    }
+
+    // Step 2: Compare existing profiles with new profiles
+    for (final existingProfile in existingProfiles) {
+      final isInNewList = newProfiles.any((newProfile) =>
+          _areProfilesEqualIgnoringGUID(newProfile, existingProfile));
+
+      if (!isInNewList) {
+        debugPrint("Profile to delete: ${existingProfile.serverClientGUID}");
+        profilesToDelete.add(existingProfile);
+      } else {
+        profilesToKeep.add(existingProfile); // Mark as a profile to keep
+      }
+    }
+
+    // Step 3: Delete profiles that are no longer in the new list
+    for (final profileToDelete in profilesToDelete) {
+      final profileBloc =
+          profileCacheCubit.getProfileBloc(profileToDelete.uuid);
+
+      if (profileBloc.state is ProfileStarted) {
+        debugPrint("Stopping profile: ${profileToDelete.uuid}");
+        profileBloc.add(const ProfileStopEvent());
+      }
+
+      debugPrint("Deleting profile: ${profileToDelete.uuid}");
+      profileListBloc.add(ProfileListDeleteEvent(toDelete: {
+        profileToDelete.uuid,
+      }));
+
+      // Remove the corresponding entry from the payload data list
+      final profileUpdateService = ProfileUpdateService();
+      profileUpdateService.removePayloadData(profileToDelete.serverClientGUID);
+
+      // Send an update API call with the updated payload data
+      try {
+        await profileUpdateService.sendUpdatedPayload();
+        debugPrint(
+            "Successfully sent updated payload after deleting profile: ${profileToDelete.serverClientGUID}");
+      } catch (e) {
+        debugPrint("Error sending updated payload after deleting profile: $e");
+      }
+    }
+
+    // Step 4: Add new profiles to the list
+    if (profilesToAdd.isNotEmpty) {
+      debugPrint(
+          "Adding new profiles: ${profilesToAdd.map((p) => p.serverClientGUID).toList()}");
+      profileListBloc.add(ProfileListAddEvent(profilesToAdd));
+    }
+
+    // Step 5: Ensure the state is updated with a deduplicated list of profiles
+    // ignore: prefer_collection_literals
+    final updatedProfiles = [
+      ...profilesToKeep,
+      ...profilesToAdd,
+    ].toSet().toList(); // Deduplicate the list
+    debugPrint(
+        "Final profile list: ${updatedProfiles.map((p) => p.serverClientGUID).toList()}");
+    profileListBloc.add(ProfileListUpdateEvent(
+        updatedProfiles.map((profile) => profile.uuid).toList()));
+
+    debugPrint("syncProfiles completed.");
+  }
+
+  bool _areProfilesEqualIgnoringGUID(Profile p1, Profile p2) {
+    final isEqual = p1.displayName == p2.displayName &&
+        p1.relayAtsign == p2.relayAtsign &&
+        p1.sshnpdAtsign == p2.sshnpdAtsign &&
+        p1.deviceName == p2.deviceName &&
+        p1.friendlyName == p2.friendlyName &&
+        p1.startUpOption == p2.startUpOption &&
+        p1.remotePort == p2.remotePort &&
+        p1.localPort == p2.localPort;
+
+    debugPrint(
+        "Comparing profiles (ignoring GUID):\nProfile 1: $p1\nProfile 2: $p2\nAre equal: $isEqual");
+    return isEqual;
   }
 }

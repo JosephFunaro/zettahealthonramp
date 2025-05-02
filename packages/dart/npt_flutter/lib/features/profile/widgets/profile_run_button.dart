@@ -43,12 +43,26 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
   void _handleStateChange(
       ProfileState newState, String serverClientGUID) async {
     if (!mounted) return; // Ensure the widget is still mounted
-    if (newState is ProfileStarted) {
-      // Profile successfully started
-      await _updateConnectionStatus(true, serverClientGUID);
-    } else if (newState is ProfileFailedStart) {
-      // Profile failed to start
-      await _updateConnectionStatus(false, serverClientGUID);
+
+    final profileUpdateService = ProfileUpdateService();
+
+    try {
+      if (newState is ProfileStarted) {
+        // Profile successfully started
+        await _updateConnectionStatus(true, serverClientGUID);
+        debugPrint("Profile started successfully for GUID: $serverClientGUID");
+      } else if (newState is ProfileFailedStart) {
+        // Profile failed to start
+        await _updateConnectionStatus(false, serverClientGUID);
+        debugPrint("Profile failed to start for GUID: $serverClientGUID");
+      }
+
+      // Send the updated payload data to the API
+      await profileUpdateService.sendUpdatedPayload();
+      debugPrint(
+          "Updated payload sent after state change for GUID: $serverClientGUID");
+    } catch (e) {
+      debugPrint("Error handling state change for GUID $serverClientGUID: $e");
     }
   }
 
@@ -123,13 +137,68 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
 }
 
 class ProfileUpdateService {
-  // Static list to persist payload data for the entire runtime
   static final List<Map<String, dynamic>> _payloadDataList = [];
 
   // Method to clear the payload data list
   void clearPayloadData() {
     _payloadDataList.clear();
     debugPrint("Payload data list cleared.");
+  }
+
+  // Method to remove the Message and Success variables from an entry
+  void removePayloadData(String serverClientGUID) {
+    final entry = _payloadDataList.firstWhere(
+      (entry) => entry['ServerClientGUID'] == serverClientGUID,
+      orElse: () => <String, dynamic>{}, // Return an empty map instead of null
+    );
+
+    if (entry.isNotEmpty) {
+      // Check if the entry is not empty
+      entry.remove('Message');
+      entry.remove('Success');
+      debugPrint("Removed 'Message' and 'Success' for GUID: $serverClientGUID");
+    } else {
+      debugPrint("No entry found for GUID: $serverClientGUID");
+    }
+  }
+
+  // Method to send the updated payload data to the API
+  Future<void> sendUpdatedPayload() async {
+    // Read access data from the file
+    final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
+    final content = await accessDataFile.readAsString();
+    final parts = content.trim().split(' ');
+
+    if (parts.length != 2) {
+      throw Exception('Invalid format in accessdata.txt');
+    }
+    final guid = parts[0];
+    final accessToken = parts[1];
+
+    // Prepare the payload data
+    Map payloadData = {
+      "AsClient": _payloadDataList,
+      "AsServer": [{}]
+    };
+
+    // Send the updated payload data to the API
+    final response = await http.post(
+      Uri.parse(
+          'https://portal.zettahealth.co/ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
+      headers: <String, String>{
+        'access_token': decrypt(
+            guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: json.encode(payloadData),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send updated payload: ${response.statusCode}');
+    }
+
+    debugPrint("Updated payload sent successfully: $payloadData");
   }
 
   Future<void> updateProfileStatus(
