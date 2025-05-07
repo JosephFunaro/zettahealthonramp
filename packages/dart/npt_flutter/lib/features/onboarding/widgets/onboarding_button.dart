@@ -18,8 +18,8 @@ import 'package:npt_flutter/features/onboarding/util/atsign_manager.dart';
 import 'package:npt_flutter/features/onboarding/util/onboarding_util.dart';
 import 'package:npt_flutter/features/onboarding/util/profile_progress_listener.dart';
 import 'package:npt_flutter/features/onboarding/widgets/activate_atsign_dialog.dart';
-import 'package:npt_flutter/features/onboarding/widgets/apkam_choice_dialog.dart';
-import 'package:npt_flutter/features/onboarding/widgets/onboarding_apkam_dialog.dart';
+//import 'package:npt_flutter/features/onboarding/widgets/apkam_choice_dialog.dart';
+//import 'package:npt_flutter/features/onboarding/widgets/onboarding_apkam_dialog.dart';
 import 'package:npt_flutter/features/onboarding/widgets/onboarding_dialog.dart';
 import 'package:npt_flutter/routes.dart';
 import 'package:npt_flutter/styles/sizes.dart';
@@ -67,10 +67,17 @@ class _OnboardingButtonState extends State<OnboardingButton> {
               setState(() {
                 buttonStatus = _OnboardingButtonStatus.loading;
               });
-              bool shouldOnboard = await selectAtsign();
+
+              final keyFiles = await _loadKeyFiles();
+              debugPrint('Loaded key files: $keyFiles');
+
+              bool shouldOnboard = await selectAtSign(keyFiles);
               if (shouldOnboard && context.mounted) {
-                var atsignInformation = context.read<OnboardingCubit>().state;
-                onboard(atsign: atsignInformation.atSign, rootDomain: atsignInformation.rootDomain);
+                final atsignInfo = context.read<OnboardingCubit>().state;
+                await onboard(
+                  atsign: atsignInfo.atSign,
+                  rootDomain: atsignInfo.rootDomain,
+                );
               }
             } finally {
               if (mounted) {
@@ -79,8 +86,10 @@ class _OnboardingButtonState extends State<OnboardingButton> {
                 });
               }
             }
+            break;
           case _OnboardingButtonStatus.loading:
-          // Do nothing
+            // Do nothing
+            break;
         }
       },
       icon: AnimatedSwitcher(
@@ -103,8 +112,7 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     );
   }
 
-  Future<bool> selectAtsign() async {
-    var options = await getAtsignEntries();
+  Future<bool> selectAtSign(Map<String, AtsignInformation> options) async {
     if (!mounted) return false;
 
     final cubit = context.read<OnboardingCubit>();
@@ -116,6 +124,7 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     } else if (atsign.isEmpty) {
       atsign = options.keys.first;
     }
+
     if (options.keys.contains(atsign)) {
       rootDomain = options[atsign]?.rootDomain;
     } else {
@@ -123,15 +132,29 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     }
 
     cubit.setState(atSign: atsign, rootDomain: rootDomain);
-    final results = await showDialog(
+
+    final selectedAtsign = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => OnboardingDialog(options: options),
+      builder: (context) => OnboardingDialog(options: options),
     );
-    return results ?? false;
+
+    if (selectedAtsign != null) {
+      debugPrint('Selected atSign: $selectedAtsign');
+      final selectedRootDomain =
+          options[selectedAtsign]?.rootDomain ?? 'root.atsign.org';
+      cubit.setState(atSign: selectedAtsign, rootDomain: selectedRootDomain);
+      return true;
+    }
+
+    return false;
   }
 
-  Future<void> onboard({required String atsign, required String rootDomain, bool isFromInitState = false}) async {
-    var atSigns = await KeyChainManager.getInstance().getAtSignListFromKeychain();
+  Future<void> onboard(
+      {required String atsign,
+      required String rootDomain,
+      bool isFromInitState = false}) async {
+    var atSigns =
+        await KeyChainManager.getInstance().getAtSignListFromKeychain();
     var apiKey = await Constants.appAPIKey;
     var config = AtOnboardingConfig(
       atClientPreference: await loadAtClientPreference(rootDomain),
@@ -161,7 +184,10 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     switch (onboardingResult?.status ?? AtOnboardingResultStatus.cancel) {
       case AtOnboardingResultStatus.success:
         await initializeContactsService(rootDomain: rootDomain);
-        AtClientManager.getInstance().atClient.syncService.addProgressListener(ProfileProgressListener());
+        AtClientManager.getInstance()
+            .atClient
+            .syncService
+            .addProgressListener(ProfileProgressListener());
         AtClientManager.getInstance().atClient.syncService.sync();
         postOnboard(onboardingResult!.atsign!, rootDomain);
         final result = await saveAtsignInformation(
@@ -170,7 +196,8 @@ class _OnboardingButtonState extends State<OnboardingButton> {
             rootDomain: rootDomain,
           ),
         );
-        final backupKeyCubit = App.navState.currentContext!.read<BackupKeyCubit>();
+        final backupKeyCubit =
+            App.navState.currentContext!.read<BackupKeyCubit>();
         if (backupKeyCubit.state == false) {
           await backupKeyCubit.putBackupKeyStatus(backupKeyCubit.state);
         }
@@ -187,7 +214,8 @@ class _OnboardingButtonState extends State<OnboardingButton> {
           SnackBar(
             backgroundColor: Colors.red,
             content: Text(
-              onboardingResult?.message ?? AppLocalizations.of(context)!.onboardingError,
+              onboardingResult?.message ??
+                  AppLocalizations.of(context)!.onboardingError,
             ),
           ),
         );
@@ -197,7 +225,8 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     }
   }
 
-  Future<AtOnboardingResult?> handleAtsignByStatus(String atsign, NoPortsOnboardingUtil util) async {
+  Future<AtOnboardingResult?> handleAtsignByStatus(
+      String atsign, NoPortsOnboardingUtil util) async {
     AtStatus status;
 
     try {
@@ -215,7 +244,9 @@ class _OnboardingButtonState extends State<OnboardingButton> {
       case AtSignStatus.unavailable:
       case AtSignStatus.teapot:
         // If the atSign is in teapot, we have to back up the keys after onboarding
-        App.navState.currentContext!.read<BackupKeyCubit>().setBackupKeyStatus(false);
+        App.navState.currentContext!
+            .read<BackupKeyCubit>()
+            .setBackupKeyStatus(false);
         final apiKey = await Constants.appAPIKey;
 
         if (apiKey == null) {
@@ -225,12 +256,15 @@ class _OnboardingButtonState extends State<OnboardingButton> {
           break;
         }
         AtOnboardingConstants.setApiKey(apiKey);
-        AtOnboardingConstants.rootDomain = util.config.atClientPreference.rootDomain;
+        AtOnboardingConstants.rootDomain =
+            util.config.atClientPreference.rootDomain;
 
-        await AtOnboardingLocalizations.load(LanguageUtil.getLanguageFromLocale(Locale(Platform.localeName)).locale);
+        await AtOnboardingLocalizations.load(
+            LanguageUtil.getLanguageFromLocale(Locale(Platform.localeName))
+                .locale);
         if (!mounted) return null;
         Map<String, String> apis = {
-          "root.atsign.org": "my.atsign.com",
+          "root.atsign.org": "my.atsign.org",
           "root.atsign.wtf": "my.atsign.wtf",
         };
         var regUrl = apis[util.config.atClientPreference.rootDomain];
@@ -255,44 +289,36 @@ class _OnboardingButtonState extends State<OnboardingButton> {
 
         if (result is AtOnboardingResult) {
           //Update primary atsign after onboard success
-          if (result.status == AtOnboardingResultStatus.success && result.atsign != null) {
+          if (result.status == AtOnboardingResultStatus.success &&
+              result.atsign != null) {
             var onboardingService = OnboardingService.getInstance();
-            bool res = await onboardingService.changePrimaryAtsign(atsign: result.atsign!);
+            bool res = await onboardingService.changePrimaryAtsign(
+                atsign: result.atsign!);
             if (!res) {
-              result = AtOnboardingResult.error(message: strings.errorSwitchAtSignFailed);
+              result = AtOnboardingResult.error(
+                  message: strings.errorSwitchAtSignFailed);
             }
           }
         }
       case AtSignStatus.activated:
         log('Atsign is activated but not in keychain');
-        final flowChoice = await showDialog<APKAMFlow?>(
-          context: context,
-          routeSettings: const RouteSettings(name: 'APKAM choice'),
-          builder: (context) => const ApkamChoiceDialog(),
-        );
-        if (flowChoice == null) {
-          result = AtOnboardingResult.cancelled();
-          break;
-        }
-        // Wait for the modal to close
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (flowChoice == APKAMFlow.atKeys) {
-          final statusStream = util.uploadAtKeysFile(atsign);
+
+        final keyFileName = '${atsign}_key.atKeys';
+        final keyFilePath = 'C:\\ZTN_KEYS\\$keyFileName';
+        debugPrint('Attempting auto-onboard using key: $keyFilePath');
+
+        if (await File(keyFilePath).exists()) {
+          final customUploadService =
+              AtKeysFileUploadService(config: util.config);
+          final statusStream =
+              customUploadService.uploadPreloadedKeyFile(keyFilePath, atsign);
           result = await handleFileUploadStatusStream(statusStream, atsign);
         } else {
-          final atClientPrefernce = await loadAtClientPreference(
-            util.config.atClientPreference.rootDomain,
-          );
-          if (!mounted) return null;
-          result = await showDialog<AtOnboardingResult>(
-            context: context,
-            routeSettings: const RouteSettings(name: 'APKAM onboarding'),
-            builder: (context) => OnboardingApkamDialog(
-              atsign: atsign,
-              atClientPreference: atClientPrefernce,
-            ),
+          result = AtOnboardingResult.error(
+            message: 'Key file for $atsign not found in C:\\ZTN_KEYS',
           );
         }
+
       case AtSignStatus.notFound:
         result = AtOnboardingResult.error(
           message: strings.errorAtSignNotExist,
@@ -306,7 +332,8 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     return result;
   }
 
-  Future<AtOnboardingResult?> handleFileUploadStatusStream(Stream<FileUploadStatus> statusStream, String atsign) async {
+  Future<AtOnboardingResult?> handleFileUploadStatusStream(
+      Stream<FileUploadStatus> statusStream, String atsign) async {
     AtOnboardingResult? result;
     outer:
     await for (FileUploadStatus status in statusStream) {
@@ -374,4 +401,25 @@ class _OnboardingButtonState extends State<OnboardingButton> {
     }
     return result;
   }
+}
+
+Future<Map<String, AtsignInformation>> _loadKeyFiles() async {
+  final directory = Directory('C:\\ZTN_KEYS');
+  final Map<String, AtsignInformation> keyFiles = {};
+
+  if (await directory.exists()) {
+    final files = directory.listSync();
+    for (var file in files) {
+      if (file is File && file.path.endsWith('.atKeys')) {
+        final fileName = file.uri.pathSegments.last
+            .replaceAll('.atKeys', '')
+            .replaceAll('_key', '');
+        keyFiles[fileName] = AtsignInformation(
+          atSign: fileName,
+          rootDomain: 'root.atsign.org',
+        );
+      }
+    }
+  }
+  return keyFiles;
 }

@@ -50,33 +50,36 @@ class OnboardingDialog extends StatelessWidget {
             ),
             gapH10,
             BlocBuilder<OnboardingCubit, OnboardingState>(
-                builder: (context, state) {
-              return SizedBox(
-                width: width,
-                child: CustomContainer.background(
+              builder: (context, state) {
+                return SizedBox(
+                  width: width,
+                  child: CustomContainer.background(
                     child: Row(
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop(false);
-                      },
-                      child: Text(strings.cancel),
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(null); // ❌ Cancel = null
+                          },
+                          child: Text(strings.cancel),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          onPressed: FormValidator.validateRequiredAtsignField(
+                                      state.atSign) ==
+                                  null
+                              ? () {
+                                  Navigator.of(context)
+                                      .pop(state.atSign); // ✅ Return atSign
+                                }
+                              : null,
+                          child: Text(strings.next),
+                        ),
+                      ],
                     ),
-                    const Spacer(),
-                    ElevatedButton(
-                      onPressed: FormValidator.validateRequiredAtsignField(
-                                  state.atSign) ==
-                              null
-                          ? () {
-                              Navigator.of(context).pop(true);
-                            }
-                          : null,
-                      child: Text(strings.next),
-                    ),
-                  ],
-                )),
-              );
-            })
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
