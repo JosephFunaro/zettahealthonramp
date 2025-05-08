@@ -3,5 +3,6 @@
         "sshnoports",
         "sshnp",
         "sshnpd"
-    ]
+    ],
+    "cmake.sourceDirectory": "C:/Users/rocks/zettahealthonramp/packages/c"
 }

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:noports_core/sshnp_params.dart';
-import 'package:noports_core/utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:sshnp_flutter/src/controllers/config_controller.dart';
 import 'package:sshnp_flutter/src/controllers/navigation_controller.dart';
@@ -76,4 +75,6 @@ class ProfileActionCallbacks {
           content: 'Unable to export profile:\n${e.toString()}');
     }
   }
+
+  static getHomeDirectory() {}
 }

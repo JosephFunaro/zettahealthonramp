@@ -17,6 +17,66 @@ class AtKeysFileUploadService {
       : _config = config;
 
   bool get isMobile => Platform.isIOS || Platform.isAndroid;
+
+// Add this at the end of AtKeysFileUploadService class
+  Stream<FileUploadStatus> uploadPreloadedKeyFile(
+      String filePath, String? pairingAtsign) {
+    final StreamController<FileUploadStatus> streamController =
+        StreamController();
+
+    () async {
+      try {
+        String? fileContents, aesKey, atsign;
+        File selectedFile = File(filePath);
+        if (!await selectedFile.exists()) {
+          streamController.add(const ErrorIncorrectKeyFile());
+          return;
+        }
+
+        int length = selectedFile.lengthSync();
+        if (length < 10) {
+          streamController.add(const ErrorIncorrectKeyFile());
+          return;
+        }
+
+        fileContents = selectedFile.readAsStringSync();
+        if (!_validatePickedFileContents(fileContents)) {
+          streamController.add(const ErrorIncorrectKeyFile());
+          return;
+        }
+
+        if (fileContents.isNotEmpty) {
+          List<String> keyData = fileContents.split(',"@');
+          List<String> params = keyData[1]
+              .toString()
+              .substring(0, keyData[1].length - 2)
+              .split('":"');
+          atsign = "@${params[0]}";
+          Map<String, dynamic> keyMap = jsonDecode(fileContents);
+          aesKey = keyMap[AtOnboardingConstants.atSelfEncryptionKey];
+        }
+
+        if (fileContents.isEmpty || (aesKey == null && atsign == null)) {
+          streamController.add(const ErrorIncorrectKeyFile());
+          return;
+        } else if (OnboardingService.getInstance().formatAtSign(atsign) !=
+                pairingAtsign &&
+            pairingAtsign != null) {
+          streamController.add(const ErrorAtSignMismatch());
+          return;
+        }
+
+        streamController.add(const FilePickingDone());
+        await _processAESKey(atsign, aesKey, fileContents, streamController);
+      } catch (e) {
+        _logger.severe('Preloaded key upload error: $e');
+        streamController.add(const ErrorFailedFileProcessing());
+      }
+    }();
+
+    return streamController.stream;
+  }
+
   Future<String?> pickFile() async {
     try {
       FilePickerResult? result = isMobile
