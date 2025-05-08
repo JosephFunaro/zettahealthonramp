@@ -1,6 +1,7 @@
 export 'bloc/profile_bloc.dart';
 export 'cubit/profile_cache_cubit.dart';
 export 'models/profile.dart';
+export 'models/connections.dart';
 export 'repository/profile_repository.dart';
 export 'view/profile_view.dart';
 export 'view/profile_view_minimal.dart';

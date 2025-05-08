@@ -3,16 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:npt_flutter/features/profile/profile.dart';
 import 'package:npt_flutter/widgets/spinner.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'dart:async';
+import 'dart:io';
 
 import '../../../styles/sizes.dart';
 
-import 'dart:async';
-import 'dart:io';
 //import 'package:npt_flutter/util/export.dart';
 //import 'package:npt_flutter/widgets/multi_select_dialog.dart';
 //import 'package:npt_flutter/features/profile/profile.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 //import 'package:flutter_bloc/flutter_bloc.dart';
 //import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
@@ -137,26 +135,21 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
 }
 
 class ProfileUpdateService {
-  static final List<Map<String, dynamic>> _payloadDataList = [];
+  static final Connections _payloadDataList = Connections.empty();
 
   // Method to clear the payload data list
   void clearPayloadData() {
-    _payloadDataList.clear();
+    _payloadDataList;
     debugPrint("Payload data list cleared.");
   }
 
   // Method to remove the Message and Success variables from an entry
   void removePayloadData(String serverClientGUID) {
-    final entry = _payloadDataList.firstWhere(
-      (entry) => entry['ServerClientGUID'] == serverClientGUID,
-      orElse: () => <String, dynamic>{}, // Return an empty map instead of null
-    );
-
-    if (entry.isNotEmpty) {
+    if (_payloadDataList.entryExists(serverClientGUID)) {
       // Check if the entry is not empty
-      entry.remove('Message');
-      entry.remove('Success');
-      debugPrint("Removed 'Message' and 'Success' for GUID: $serverClientGUID");
+      _payloadDataList.updateSuccess(
+          serverClientGUID, false, true, "Connection closed.");
+      debugPrint("Closed connection for GUID: $serverClientGUID");
     } else {
       debugPrint("No entry found for GUID: $serverClientGUID");
     }
@@ -174,29 +167,13 @@ class ProfileUpdateService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
-
+    final accessTokenDecrypt =
+        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
     // Prepare the payload data
-    Map payloadData = {
-      "AsClient": _payloadDataList,
-      "AsServer": [{}]
-    };
+    Connections payloadData = Connections.empty();
 
     // Send the updated payload data to the API
-    final response = await http.post(
-      Uri.parse(
-          'https://imvirtusinc-dev.outsystemsenterprise.com//ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
-      headers: <String, String>{
-        'access_token': decrypt(
-            guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: json.encode(payloadData),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to send updated payload: ${response.statusCode}');
-    }
+    await httpCall("update;$guid;0;$accessTokenDecrypt", payloadData);
 
     debugPrint("Updated payload sent successfully: $payloadData");
   }
@@ -213,53 +190,34 @@ class ProfileUpdateService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
+    final accessTokenDecrypt =
+        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
 
     try {
       // Check if the ServerClientGUID already exists in the list
-      final existingEntry = _payloadDataList.firstWhere(
-        (entry) => entry['ServerClientGUID'] == serverClientGUID,
-        orElse: () => {},
-      );
 
-      if (existingEntry.isNotEmpty) {
+      if (_payloadDataList.entryExists(serverClientGUID)) {
         // Update the existing entry
-        existingEntry['Success'] = isSuccess;
-        existingEntry['Message'] = isSuccess
-            ? "Client successfully started!"
-            : "Issue occurred when starting client.";
+        // Check if the entry is not empty
+        _payloadDataList.updateSuccess(
+            serverClientGUID,
+            isSuccess,
+            true,
+            isSuccess
+                ? "Client successfully started!"
+                : "Issue occurred when starting client.");
       } else {
         // Add a new entry
-        _payloadDataList.add({
-          "ServerClientGUID": serverClientGUID,
-          "Success": isSuccess,
-          "Message": isSuccess
-              ? "Client successfully started!"
-              : "Issue occurred when starting client."
-        });
+        _payloadDataList.addClientEntry(
+            serverClientGUID,
+            isSuccess,
+            isSuccess
+                ? "Client successfully started!"
+                : "Issue occurred when starting client.");
       }
 
-      // Prepare the payload data
-      Map payloadData = {
-        "AsClient": _payloadDataList,
-        "AsServer": [{}]
-      };
-
-      final response = await http.post(
-        Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com//ZBMSCareNET360_API/rest/endpoint/conns/v1?action=update&guid=$guid'),
-        headers: <String, String>{
-          'access_token': decrypt(
-              guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: json.encode(payloadData),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Failed to send connection status: ${response.statusCode}');
-      }
+      // Send the updated payload data to the API
+      await httpCall("update;$guid;0;$accessTokenDecrypt", _payloadDataList);
     } catch (e) {
       throw Exception('Failed to connect: $e');
     }

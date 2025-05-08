@@ -3,22 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:npt_flutter/features/profile/models/profile.dart';
-import 'package:npt_flutter/features/profile/widgets/profile_run_button.dart';
-//import 'package:npt_flutter/util/export.dart';
-//import 'package:npt_flutter/widgets/multi_select_dialog.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-//import 'package:npt_flutter/features/profile/profile.dart';
-import 'package:http/http.dart' as http;
+import 'package:npt_flutter/features/profile/profile.dart';
 import 'dart:convert';
 import 'package:npt_flutter/features/profile_list/bloc/profile_list_bloc.dart';
-//import 'package:flutter_bloc/flutter_bloc.dart';
-//import '../../../styles/sizes.dart';
 import '../cubit/profiles_selected_cubit.dart';
 import 'package:uuid/uuid.dart';
 import 'package:encrypt/encrypt.dart' as crypt;
-import 'package:npt_flutter/features/profile/bloc/profile_bloc.dart';
-import 'package:npt_flutter/features/profile/cubit/profile_cache_cubit.dart';
 
 class ProfileListImportButton extends StatefulWidget {
   final TextEditingController textController;
@@ -206,22 +197,16 @@ class ProfileImportService {
       throw Exception('Invalid format in accessdata.txt');
     }
     final guid = parts[0];
+    final accessToken = parts[1];
+    final accessTokenDecrypt =
+        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
     debugPrint('CALLING CHECK FOR UPDATE: $guid $since');
-    final checkResponse = await http.get(
-        Uri.parse(
-            'https://imvirtusinc-dev.outsystemsenterprise.com//ZBMSCareNET360_API/rest/endpoint/check/v1?guid=$guid&since=$since'),
-        headers: <String, String>{'Content-Type': 'text/plain'});
-    if (checkResponse.statusCode == 200) {
-      dynamic dataBody = jsonDecode(checkResponse.body);
-      debugPrint('CHECK FOR UPDATE RESPONSE: $dataBody');
-      if (dataBody == 1) {
-        return true;
-      } else {
-        return false;
-      }
+    await httpCall(
+        "check;$guid;$since;$accessTokenDecrypt", Connections.empty());
+    if (updateResponse[0] == "true") {
+      return true;
     } else {
-      throw Exception(
-          'Failed to check for updates: ${checkResponse.statusCode}');
+      return false;
     }
   }
 
@@ -236,46 +221,35 @@ class ProfileImportService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
-    final getResponse = await http.post(
-      Uri.parse(
-          'https://imvirtusinc-dev.outsystemsenterprise.com//ZBMSCareNET360_API/rest/endpoint/conns/v1?action=get&guid=$guid'),
-      headers: <String, String>{
-        'access_token': decrypt(
-            guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken)),
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: '{}',
-    );
-    if (getResponse.statusCode == 200) {
-      final Map<String, dynamic> decoded = jsonDecode(getResponse.body);
-      final connections = decoded['Connections'];
-
-      if (connections == null || connections['AsClient'] == null) {
-        throw Exception('No connections found');
-      }
-
-      final uuids = <Profile>[];
-      final List<dynamic> clients = connections['AsClient'];
-      final String startUpOption = decoded['Endpoint']['StartUpOption'];
-
-      for (var entry in clients) {
-        final newProfile = Profile(const Uuid().v4(),
-            displayName: entry["ServiceName"],
-            relayAtsign: "@rv_am",
-            sshnpdAtsign: entry["ServerDataKey"],
-            deviceName: entry["ServiceDeviceName"],
-            friendlyName: entry["ServerEndpointFriendlyName"],
-            startUpOption: startUpOption,
-            remotePort: entry["ServicePort"],
-            localPort: entry["ClientPort"],
-            serverClientGUID: entry["ServerClientGUID"]);
-        uuids.add(newProfile);
-      }
-      return uuids;
-    } else {
-      throw Exception('Failed to load connections: ${getResponse.statusCode}');
+    final accessTokenDecrypt =
+        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
+    await httpCall("get;$guid;0;$accessTokenDecrypt", Connections.empty());
+    // check if the data key name is not null, or if it matches the one already
+    // saved
+    if (responseBody == "ERROR" || responseBody == null) {
+      throw "ERROR: Did not receive a message to update policy ports.";
     }
+    responseBody = json.decode(responseBody);
+
+    dynamic clientSideData = responseBody["Connections"]["AsClient"];
+
+    final uuids = <Profile>[];
+    final String startUpOption = responseBody['Endpoint']['StartUpOption'];
+
+    for (var entry in clientSideData) {
+      final newProfile = Profile(const Uuid().v4(),
+          displayName: entry["ServiceName"],
+          relayAtsign: "@rv_am",
+          sshnpdAtsign: entry["ServerDataKey"],
+          deviceName: entry["ServiceDeviceName"],
+          friendlyName: entry["ServerEndpointFriendlyName"],
+          startUpOption: startUpOption,
+          remotePort: entry["ServicePort"],
+          localPort: entry["ClientPort"],
+          serverClientGUID: entry["ServerClientGUID"]);
+      uuids.add(newProfile);
+    }
+    return uuids;
   }
 
   String decrypt(String keyString, crypt.Encrypted encryptedData) {
