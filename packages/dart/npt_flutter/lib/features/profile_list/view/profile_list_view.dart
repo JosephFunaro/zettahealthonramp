@@ -24,6 +24,16 @@ class ProfileListView extends StatefulWidget {
 class _ProfileListViewState extends State<ProfileListView> {
   final TextEditingController _searchController = TextEditingController();
   bool _isRefreshing = false; // Add a state variable to track refreshing status
+  bool _isDeactivated = false; // <-- Add this flag
+
+  // Call this from your import/fetch logic when you get the deactivated flag
+  void setDeactivated(bool value) {
+    if (mounted) {
+      setState(() {
+        _isDeactivated = value;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +52,7 @@ class _ProfileListViewState extends State<ProfileListView> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          barrierColor: Colors.black.withValues(alpha: 0.2),
+          barrierColor: Colors.black.withAlpha(51),
           builder: (context) => const BackupKeyAlertDialog(),
         );
       }
@@ -56,6 +66,24 @@ class _ProfileListViewState extends State<ProfileListView> {
     final deviceSize = MediaQuery.of(context).size;
     final bodyMedium = Theme.of(context).textTheme.bodyMedium;
     SizeConfig().init();
+
+    // Show warning if deactivated
+    if (_isDeactivated) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text(
+            "WARNING: This Endpoint has been deactivated as it has been suspected to be compromised. Please uninstall and reinstall this Endpoint.",
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
 
     return Stack(
       children: [
@@ -135,6 +163,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   _isRefreshing = false;
                                                 });
                                               },
+                                              onDeactivated:
+                                                  setDeactivated, // <-- Pass callback
                                             ),
                                             AutoProfileFetcher(
                                               textController: _searchController,
@@ -148,6 +178,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   _isRefreshing = false;
                                                 });
                                               },
+                                              onDeactivated:
+                                                  setDeactivated, // <-- Pass callback
                                             ),
                                           ],
                                         )
@@ -193,6 +225,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   _isRefreshing = false;
                                                 });
                                               },
+                                              onDeactivated:
+                                                  setDeactivated, // <-- Pass callback
                                             ),
                                             AutoProfileFetcher(
                                               textController: _searchController,
@@ -206,6 +240,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   _isRefreshing = false;
                                                 });
                                               },
+                                              onDeactivated:
+                                                  setDeactivated, // <-- Pass callback
                                             ),
                                           ],
                                         ),

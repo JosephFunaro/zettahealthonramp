@@ -15,12 +15,14 @@ class ProfileListImportButton extends StatefulWidget {
   final TextEditingController textController;
   final VoidCallback onStartRefresh; // Callback to notify when refresh starts
   final VoidCallback onEndRefresh; // Callback to notify when refresh ends
+  final void Function(bool)? onDeactivated; // <-- Add this callback
 
   const ProfileListImportButton({
     super.key,
     required this.textController,
     required this.onStartRefresh,
     required this.onEndRefresh,
+    this.onDeactivated, // <-- Add this
   });
 
   @override
@@ -47,10 +49,16 @@ class _ProfileListImportButtonState extends State<ProfileListImportButton> {
             context.findAncestorStateOfType<_AutoProfileFetcherState>();
 
         try {
-          // Fetch new profiles
-          final newProfiles = await ProfileImportService().fetchProfileGuids(
+          // Fetch new profiles and deactivation flag
+          final (newProfiles, isDeactivated) =
+              await ProfileImportService().fetchProfileGuids(
             DateTime(1900, 1, 1, 0, 0, 0).toString(),
           );
+
+          // Notify parent if deactivated
+          if (widget.onDeactivated != null) {
+            widget.onDeactivated!(isDeactivated);
+          }
 
           // Sync profiles
           await ProfileImportService()
@@ -79,12 +87,14 @@ class AutoProfileFetcher extends StatefulWidget {
   final TextEditingController textController;
   final VoidCallback onStartRefresh; // Callback to notify when refresh starts
   final VoidCallback onEndRefresh; // Callback to notify when refresh ends
+  final void Function(bool)? onDeactivated; // <-- Add this
 
   const AutoProfileFetcher({
     super.key,
     required this.textController,
     required this.onStartRefresh,
     required this.onEndRefresh,
+    this.onDeactivated, // <-- Add this
   });
 
   @override
@@ -158,8 +168,14 @@ class _AutoProfileFetcherState extends State<AutoProfileFetcher> {
     final profileCacheCubit = context.read<ProfileCacheCubit>();
 
     try {
-      // Fetch new profiles
-      final newProfiles = await ProfileImportService().fetchProfileGuids(since);
+      // Fetch new profiles and deactivation flag
+      final (newProfiles, isDeactivated) =
+          await ProfileImportService().fetchProfileGuids(since);
+
+      // Notify parent if deactivated
+      if (widget.onDeactivated != null) {
+        widget.onDeactivated!(isDeactivated);
+      }
 
       // Sync profiles
       await ProfileImportService()
@@ -190,6 +206,11 @@ class ProfileImportService {
   Future<bool> checkForUpdate(String since) async {
     // Read access data from the file
     final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
+    final installDataFile = File(r'C:\ZTN\FILES\install_info.txt');
+    final installContent = await installDataFile.readAsString();
+    const errorMessage =
+        "ERROR: This router was shut down due to mismatching checksums. "
+        "Please check the installation info in CareNET360.";
     final content = await accessDataFile.readAsString();
     final parts = content.trim().split(' ');
 
@@ -203,14 +224,17 @@ class ProfileImportService {
     debugPrint('CALLING CHECK FOR UPDATE: $guid $since');
     await httpCall(
         "check;$guid;$since;$accessTokenDecrypt", Connections.empty());
+    debugPrint(updateResponse[0]);
     if (updateResponse[0] == "true") {
+      return true;
+    } else if (updateResponse[0] == "nan" && installContent == errorMessage) {
       return true;
     } else {
       return false;
     }
   }
 
-  Future<List<Profile>> fetchProfileGuids(String since) async {
+  Future<(List<Profile>, bool)> fetchProfileGuids(String since) async {
     // Read access data from the file
     final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
     final content = await accessDataFile.readAsString();
@@ -219,37 +243,47 @@ class ProfileImportService {
     if (parts.length != 2) {
       throw Exception('Invalid format in accessdata.txt');
     }
-    final guid = parts[0];
-    final accessToken = parts[1];
-    final accessTokenDecrypt =
-        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
-    await httpCall("get;$guid;0;$accessTokenDecrypt", Connections.empty());
-    // check if the data key name is not null, or if it matches the one already
-    // saved
-    if (responseBody == "ERROR" || responseBody == null) {
-      throw "ERROR: Did not receive a message to update policy ports.";
-    }
-    responseBody = json.decode(responseBody);
 
-    dynamic clientSideData = responseBody["Connections"]["AsClient"];
+    final installDataFile = File(r'C:\ZTN\FILES\install_info.txt');
+    final installContent = await installDataFile.readAsString();
+    const errorMessage =
+        "ERROR: This router was shut down due to mismatching checksums. "
+        "Please check the installation info in CareNET360.";
 
+    // Check SetupStatus
+    bool isDeactivated = false;
     final uuids = <Profile>[];
-    final String startUpOption = responseBody['Endpoint']['StartUpOption'];
+    if (installContent == errorMessage) {
+      isDeactivated = true;
+    } else {
+      final guid = parts[0];
+      final accessToken = parts[1];
+      final accessTokenDecrypt = decrypt(
+          guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
+      await httpCall("get;$guid;0;$accessTokenDecrypt", Connections.empty());
+      if (responseBody == "ERROR" || responseBody == null) {
+        throw "ERROR: Did not receive a message to update policy ports.";
+      }
+      responseBody = json.decode(responseBody);
 
-    for (var entry in clientSideData) {
-      final newProfile = Profile(const Uuid().v4(),
-          displayName: entry["ServiceName"],
-          relayAtsign: "@rv_am",
-          sshnpdAtsign: entry["ServerDataKey"],
-          deviceName: entry["ServiceDeviceName"],
-          friendlyName: entry["ServerEndpointFriendlyName"],
-          startUpOption: startUpOption,
-          remotePort: entry["ServicePort"],
-          localPort: entry["ClientPort"],
-          serverClientGUID: entry["ServerClientGUID"]);
-      uuids.add(newProfile);
+      dynamic clientSideData = responseBody["Connections"]["AsClient"];
+      final String startUpOption = responseBody['Endpoint']['StartUpOption'];
+
+      for (var entry in clientSideData) {
+        final newProfile = Profile(const Uuid().v4(),
+            displayName: entry["ServiceName"],
+            relayAtsign: "@rv_am",
+            sshnpdAtsign: entry["ServerDataKey"],
+            deviceName: entry["ServiceDeviceName"],
+            friendlyName: entry["ServerEndpointFriendlyName"],
+            startUpOption: startUpOption,
+            remotePort: entry["ServicePort"],
+            localPort: entry["ClientPort"],
+            serverClientGUID: entry["ServerClientGUID"]);
+        uuids.add(newProfile);
+      }
     }
-    return uuids;
+    return (uuids, isDeactivated);
   }
 
   String decrypt(String keyString, crypt.Encrypted encryptedData) {
