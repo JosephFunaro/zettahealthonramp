@@ -26,20 +26,27 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
   StreamSubscription<ProfileState>? _blocSubscription;
 
   Future<void> _updateConnectionStatus(
-      bool isSuccess, String serverClientGUID) async {
+    bool isSuccess,
+    String serverClientGUID,
+  ) async {
     final profileUpdateService = ProfileUpdateService();
     try {
       await profileUpdateService.updateProfileStatus(
-          isSuccess, serverClientGUID);
+        isSuccess,
+        serverClientGUID,
+      );
       debugPrint(
-          'Connection status updated: ${isSuccess ? "Success" : "Failure"} for GUID: $serverClientGUID');
+        'Connection status updated: ${isSuccess ? "Success" : "Failure"} for GUID: $serverClientGUID',
+      );
     } catch (e) {
       debugPrint('Failed to update connection status: $e');
     }
   }
 
   void _handleStateChange(
-      ProfileState newState, String serverClientGUID) async {
+    ProfileState newState,
+    String serverClientGUID,
+  ) async {
     if (!mounted) return; // Ensure the widget is still mounted
 
     final profileUpdateService = ProfileUpdateService();
@@ -58,7 +65,8 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
       // Send the updated payload data to the API
       await profileUpdateService.sendUpdatedPayload();
       debugPrint(
-          "Updated payload sent after state change for GUID: $serverClientGUID");
+        "Updated payload sent after state change for GUID: $serverClientGUID",
+      );
     } catch (e) {
       debugPrint("Error handling state change for GUID $serverClientGUID: $e");
     }
@@ -93,39 +101,37 @@ class _ProfileRunButtonState extends State<ProfileRunButton> {
           return switch (state) {
             ProfileLoaded() ||
             ProfileFailedSave() ||
-            ProfileFailedStart() =>
-              IconButton(
-                icon: PhosphorIcon(PhosphorIcons.play()),
-                onPressed: () {
-                  // Cancel any existing subscription to avoid duplicates
-                  _blocSubscription?.cancel();
+            ProfileFailedStart() => IconButton(
+              icon: PhosphorIcon(PhosphorIcons.play()),
+              onPressed: () {
+                // Cancel any existing subscription to avoid duplicates
+                _blocSubscription?.cancel();
 
-                  // Check if the widget is still mounted and the Bloc is active
-                  if (!mounted) return;
+                // Check if the widget is still mounted and the Bloc is active
+                if (!mounted) return;
 
-                  final profileBloc = context.read<ProfileBloc>();
-                  if (profileBloc.isClosed) {
-                    debugPrint('ProfileBloc is closed. Cannot add new events.');
-                    return;
-                  }
+                final profileBloc = context.read<ProfileBloc>();
+                if (profileBloc.isClosed) {
+                  debugPrint('ProfileBloc is closed. Cannot add new events.');
+                  return;
+                }
 
-                  // Dispatch the start event
-                  profileBloc.add(const ProfileStartEvent());
+                // Dispatch the start event
+                profileBloc.add(const ProfileStartEvent());
 
-                  // Listen for state changes
-                  _blocSubscription = profileBloc.stream.listen(
-                    (newState) =>
-                        _handleStateChange(newState, serverClientGUID),
-                  );
-                },
-              ),
+                // Listen for state changes
+                _blocSubscription = profileBloc.stream.listen(
+                  (newState) => _handleStateChange(newState, serverClientGUID),
+                );
+              },
+            ),
             ProfileStarting() => const Spinner(),
             ProfileStarted() => IconButton(
-                icon: PhosphorIcon(PhosphorIcons.stop()),
-                onPressed: () {
-                  context.read<ProfileBloc>().add(const ProfileStopEvent());
-                },
-              ),
+              icon: PhosphorIcon(PhosphorIcons.stop()),
+              onPressed: () {
+                context.read<ProfileBloc>().add(const ProfileStopEvent());
+              },
+            ),
             ProfileStopping() => const Spinner(),
           };
         },
@@ -148,7 +154,11 @@ class ProfileUpdateService {
     if (_payloadDataList.entryExists(serverClientGUID)) {
       // Check if the entry is not empty
       _payloadDataList.updateSuccess(
-          serverClientGUID, false, true, "Connection closed.");
+        serverClientGUID,
+        false,
+        true,
+        "Connection closed.",
+      );
       debugPrint("Closed connection for GUID: $serverClientGUID");
     } else {
       debugPrint("No entry found for GUID: $serverClientGUID");
@@ -167,8 +177,10 @@ class ProfileUpdateService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
-    final accessTokenDecrypt =
-        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
+    final accessTokenDecrypt = decrypt(
+      guid.substring(0, 16),
+      crypt.Encrypted.fromBase16(accessToken),
+    );
     // Prepare the payload data
     Connections payloadData = Connections.empty();
 
@@ -179,7 +191,9 @@ class ProfileUpdateService {
   }
 
   Future<void> updateProfileStatus(
-      bool isSuccess, String serverClientGUID) async {
+    bool isSuccess,
+    String serverClientGUID,
+  ) async {
     // Read access data from the file
     final accessDataFile = File(r'C:\ZTN\FILES\accessdata.txt');
     final content = await accessDataFile.readAsString();
@@ -190,8 +204,10 @@ class ProfileUpdateService {
     }
     final guid = parts[0];
     final accessToken = parts[1];
-    final accessTokenDecrypt =
-        decrypt(guid.substring(0, 16), crypt.Encrypted.fromBase16(accessToken));
+    final accessTokenDecrypt = decrypt(
+      guid.substring(0, 16),
+      crypt.Encrypted.fromBase16(accessToken),
+    );
 
     try {
       // Check if the ServerClientGUID already exists in the list
@@ -200,20 +216,22 @@ class ProfileUpdateService {
         // Update the existing entry
         // Check if the entry is not empty
         _payloadDataList.updateSuccess(
-            serverClientGUID,
-            isSuccess,
-            true,
-            isSuccess
-                ? "Client successfully started!"
-                : "Issue occurred when starting client.");
+          serverClientGUID,
+          isSuccess,
+          true,
+          isSuccess
+              ? "Client successfully started!"
+              : "Issue occurred when starting client.",
+        );
       } else {
         // Add a new entry
         _payloadDataList.addClientEntry(
-            serverClientGUID,
-            isSuccess,
-            isSuccess
-                ? "Client successfully started!"
-                : "Issue occurred when starting client.");
+          serverClientGUID,
+          isSuccess,
+          isSuccess
+              ? "Client successfully started!"
+              : "Issue occurred when starting client.",
+        );
       }
 
       // Send the updated payload data to the API

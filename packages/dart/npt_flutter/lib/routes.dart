@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/app.dart';
 import 'package:npt_flutter/home_wrapper_widget.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 
 import 'pages/pages.dart';
 
@@ -21,6 +21,7 @@ class HomeRoutes {
   static const authorisation = '/authorization';
   static const profileForm = '/profile';
   static const loadingPage = '/loading';
+  static const policyManager = '/policy-manager';
 
   static final Map<String, WidgetBuilder> routes = {
     // The parent navigator initially pushes '/' as the route so needs to be handled.
@@ -38,6 +39,8 @@ String routeName(String route) {
   final uncapitalized = route.split('/').last;
   final capitalized =
       uncapitalized[0].toUpperCase() + uncapitalized.substring(1);
+  final capitalized =
+      uncapitalized[0].toUpperCase() + uncapitalized.substring(1);
   final strings = AppLocalizations.of(App.navState.currentContext!)!;
   switch (capitalized) {
     case 'Dashboard':
@@ -50,7 +53,10 @@ String routeName(String route) {
       return strings.profile;
     case 'Loading':
       return strings.loading;
-
+    case 'Policy-manager':
+      return strings.policyManager;
+    case 'Manage-atsign':
+      return 'Manage atSigns';
     default:
   }
   return capitalized;

@@ -1,7 +1,7 @@
 # Dockerfile.package
 # A dockerfile for packaging SSH No Ports releases using docker buildx
 
-FROM atsigncompany/cbuildimage:CMake-3.31.4@sha256:0b443da3bccd746e23323eb374d19ba156b497ecbee6c5e84f97d77954515cbf AS build
+FROM atsigncompany/cbuildimage:CMake-3.31.9@sha256:31ae812f3f93d2aa70ea32d187b7118b95daf8f2c548c4b86b413f0258f958a6 AS build
 WORKDIR /sshnpd
 COPY . .
 RUN set -eux; \
@@ -10,7 +10,7 @@ RUN set -eux; \
     arm64)   ARCH="arm64";; \
   esac; \
   cd /sshnpd/sshnpd; \
-  cmake -B build -S . -DBUILD_SHARED_LIBS=off -DCMAKE_C_COMPILER=clang-18 -DCMAKE_C_FLAGS="-Wno-error -pthread"; \
+  cmake -B build -S . -DBUILD_SHARED_LIBS=off -DCMAKE_C_COMPILER=clang-19 -DCMAKE_C_FLAGS="-Wno-error -pthread"; \
   cmake --build build; \
   mkdir /tarball; \
   cd build; \

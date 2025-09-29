@@ -1,35 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/onboarding/onboarding.dart';
 import 'package:npt_flutter/features/onboarding/util/atsign_manager.dart';
 //import 'package:npt_flutter/features/onboarding/widgets/at_directory_selector.dart';
 import 'package:npt_flutter/features/onboarding/widgets/atsign_selector.dart';
+import 'package:npt_flutter/features/onboarding/widgets/client_atsign_description_widget.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/styles/sizes.dart';
 import 'package:npt_flutter/util/form_validator.dart';
 import 'package:npt_flutter/widgets/custom_container.dart';
 
-class OnboardingDialog extends StatelessWidget {
+class OnboardingDialog extends StatefulWidget {
   const OnboardingDialog({required this.options, super.key});
   final Map<String, AtsignInformation> options;
 
   @override
+  State<OnboardingDialog> createState() => _OnboardingDialogState();
+}
+
+class _OnboardingDialogState extends State<OnboardingDialog> {
+  bool visibility = false;
+
+  @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context)!;
-    final width = MediaQuery.of(context).size.width * 0.50;
+    final width = MediaQuery.of(context).size.width * 0.70;
+    final titleStyle = Theme.of(context).textTheme.titleMedium;
+
     return AlertDialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Sizes.p10),
       ),
-      content: Padding(
-        padding: const EdgeInsets.all(Sizes.p20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: width,
-              child: CustomContainer.background(
+      content: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(Sizes.p20),
+          child: Column(
+            spacing: Sizes.p10,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomContainer.background(
+                width: width,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

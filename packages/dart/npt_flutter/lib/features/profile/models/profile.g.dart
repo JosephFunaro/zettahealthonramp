@@ -7,28 +7,28 @@ part of 'profile.dart';
 // **************************************************************************
 
 Profile _$ProfileFromJson(Map<String, dynamic> json) => Profile(
-      json['uuid'] as String? ?? '',
-      displayName: json['displayName'] as String,
-      relayAtsign: json['relayAtsign'] as String?,
-      sshnpdAtsign: json['sshnpdAtsign'] as String,
-      deviceName: json['deviceName'] as String,
-      friendlyName: json['friendlyName'] as String,
-      startUpOption: json['startUpOption'] as String,
-      remoteHost: json['remoteHost'] as String? ?? 'localhost',
-      remotePort: (json['remotePort'] as num).toInt(),
-      localPort: (json['localPort'] as num).toInt(),
-      serverClientGUID: json['serverClientGUID'] as String,
-    );
+  json['uuid'] as String? ?? '',
+  displayName: json['displayName'] as String,
+  relayAtsign: json['relayAtsign'] as String?,
+  sshnpdAtsign: json['sshnpdAtsign'] as String,
+  deviceName: json['deviceName'] as String,
+  friendlyName: json['friendlyName'] as String,
+  startUpOption: json['startUpOption'] as String,
+  remoteHost: json['remoteHost'] as String? ?? 'localhost',
+  remotePort: (json['remotePort'] as num).toInt(),
+  localPort: (json['localPort'] as num).toInt(),
+  serverClientGUID: json['serverClientGUID'] as String,
+);
 
 Map<String, dynamic> _$ProfileToJson(Profile instance) => <String, dynamic>{
-      'displayName': instance.displayName,
-      'relayAtsign': instance.relayAtsign,
-      'sshnpdAtsign': instance.sshnpdAtsign,
-      'deviceName': instance.deviceName,
-      'friendlyName': instance.friendlyName,
-      'startUpOption': instance.startUpOption,
-      'remoteHost': instance.remoteHost,
-      'remotePort': instance.remotePort,
-      'localPort': instance.localPort,
-      'serverClientGUID': instance.serverClientGUID,
-    };
+  'displayName': instance.displayName,
+  'relayAtsign': instance.relayAtsign,
+  'sshnpdAtsign': instance.sshnpdAtsign,
+  'deviceName': instance.deviceName,
+  'friendlyName': instance.friendlyName,
+  'startUpOption': instance.startUpOption,
+  'remoteHost': instance.remoteHost,
+  'remotePort': instance.remotePort,
+  'localPort': instance.localPort,
+  'serverClientGUID': instance.serverClientGUID,
+};

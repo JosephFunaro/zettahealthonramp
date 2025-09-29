@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:at_onboarding_flutter/at_onboarding_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/authorisation/cubit/pending_requests_count_cubit.dart';
 import 'package:npt_flutter/features/back_up_key/cubit/backup_key_cubit.dart';
 import 'package:npt_flutter/features/back_up_key/repository/backup_key_repository.dart';
 import 'package:npt_flutter/features/features.dart';
+import 'package:npt_flutter/features/policy/repositories/role_repository.dart';
 import 'package:npt_flutter/features/profile_list/cubit/sync_cubit.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/routes.dart';
 import 'package:npt_flutter/styles/app_theme.dart';
 import 'package:npt_flutter/util/language.dart';
@@ -41,26 +42,21 @@ class App extends StatelessWidget {
           create: (_) => AuthorisationService(),
         ),
         RepositoryProvider<BackUpKeyRepository>(
-            create: (_) => BackUpKeyRepository())
+          create: (_) => BackUpKeyRepository(),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
           // TODO this should be called LocalSettingsCubit and move
           // Localization from the SettingsCubit to this
-          BlocProvider<EnableLoggingCubit>(
-            create: (_) => EnableLoggingCubit(),
-          ),
+          BlocProvider<EnableLoggingCubit>(create: (_) => EnableLoggingCubit()),
 
           /// Logging provider must come before ALL [LoggingBloc] & [LoggingCubit] providers
           /// There MUST be a [LogsCubit] provider as an ancestor widget
-          BlocProvider<LogsCubit>(
-            create: (_) => LogsCubit(),
-          ),
+          BlocProvider<LogsCubit>(create: (_) => LogsCubit()),
 
           // A bloc which manages the atDirectory state
-          BlocProvider<OnboardingCubit>(
-            create: (_) => OnboardingCubit(),
-          ),
+          BlocProvider<OnboardingCubit>(create: (_) => OnboardingCubit()),
 
           /// Settings provider, not much else to say
           /// - If settings are not found, we automatically load some defaults
@@ -95,9 +91,7 @@ class App extends StatelessWidget {
           ),
 
           /// A cubit which manages the system tray entries
-          BlocProvider<TrayCubit>(
-            create: (_) => TrayCubit(),
-          ),
+          BlocProvider<TrayCubit>(create: (_) => TrayCubit()),
 
           /// A bloc which manages favorites
           BlocProvider<FavoriteBloc>(
@@ -106,14 +100,14 @@ class App extends StatelessWidget {
           BlocProvider<PendingRequestsCountCubit>(
             create: (ctx) =>
                 PendingRequestsCountCubit(ctx.read<AuthorisationService>()),
+            create: (ctx) =>
+                PendingRequestsCountCubit(ctx.read<AuthorisationService>()),
           ),
 
           /// A cubit which tracks the sync status of the profiles
           BlocProvider<SyncCubit>(create: (_) => SyncCubit()),
           // A cubit which tracks if the atkey is backed up
-          BlocProvider<BackupKeyCubit>(
-            create: (ctx) => BackupKeyCubit(),
-          ),
+          BlocProvider<BackupKeyCubit>(create: (ctx) => BackupKeyCubit()),
         ],
         child: BlocSelector<SettingsBloc, SettingsState, Language?>(
           selector: (state) {
@@ -124,9 +118,16 @@ class App extends StatelessWidget {
             return null;
           },
           builder: (context, language) {
-            Locale locale = language?.locale ??
-                LanguageUtil.getLanguageFromLocale(Locale(Platform.localeName))
-                    .locale;
+            Locale locale =
+                language?.locale ??
+                LanguageUtil.getLanguageFromLocale(
+                  Locale(Platform.localeName),
+                ).locale;
+            Locale locale =
+                language?.locale ??
+                LanguageUtil.getLanguageFromLocale(
+                  Locale(Platform.localeName),
+                ).locale;
             return TrayManager(
               locale: locale,
               child: MaterialApp(

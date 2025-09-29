@@ -17,25 +17,27 @@ class ProfileServiceView extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: BlocSelector<ProfileBloc, ProfileState, (int, String, int)?>(
-              selector: (state) {
-            if (state is! ProfileLoadedState) return null;
-            return (
-              state.profile.localPort,
-              state.profile.remoteHost,
-              state.profile.remotePort
-            );
-          }, builder: (BuildContext context, (int, String, int)? triple) {
-            if (triple == null) return gap0;
-            var (localPort, remoteHost, remotePort) = triple;
-            return Tooltip(
-              message: '$localPort:$remoteHost:$remotePort',
-              child: Text(
-                '$localPort:$remoteHost:$remotePort',
-                textAlign: TextAlign.center, // Ensure text is centered
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            );
-          }),
+            selector: (state) {
+              if (state is! ProfileLoadedState) return null;
+              return (
+                state.profile.localPort,
+                state.profile.remoteHost,
+                state.profile.remotePort,
+              );
+            },
+            builder: (BuildContext context, (int, String, int)? triple) {
+              if (triple == null) return gap0;
+              var (localPort, remoteHost, remotePort) = triple;
+              return Tooltip(
+                message: '$localPort:$remoteHost:$remotePort',
+                child: Text(
+                  '$localPort:$remoteHost:$remotePort',
+                  textAlign: TextAlign.center, // Ensure text is centered
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

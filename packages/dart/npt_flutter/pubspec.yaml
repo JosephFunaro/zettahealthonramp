@@ -16,19 +16,19 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.2.0+15
+version: 1.6.0+19
 msix_config:
   display_name: "NoPorts Desktop"
   publisher_display_name: Atsign Inc
   identity_name: TheCompany.NoPortsDesktop
   publisher: CN=BBFE1D0B-F713-4C7F-B375-5EA851CBB1FF
-  msix_version: 1.2.0.0
+  msix_version: 1.6.0.0
   logo_path: "assets/logo.png"
   capabilities: internetClient
   store: true
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.8.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -40,11 +40,8 @@ dependencies:
   adaptive_theme: ^3.6.0
   at_auth: ^2.0.7
   at_backupkey_flutter: ^4.0.16
-  at_client_mobile:
-    git:
-      url: https://github.com/atsign-foundation/at_client_sdk.git
-      path: packages/at_client_mobile
-      ref: 8e8b68d2f00db0aeca266685be1e9c0b103ad301
+  at_client_mobile: ^3.2.24
+  at_client: ^3.7.0
   at_contact: ^3.0.8
   at_contacts_flutter: ^4.0.15
   at_onboarding_flutter:
@@ -77,10 +74,9 @@ dependencies:
   pin_code_fields: ^8.0.1
   socket_connector: ^2.3.3
   toml: ^0.16.0
-  tray_manager: ^0.2.3
-  universal_html: ^2.2.4
+  tray_manager: ^0.5.1
   url_launcher: ^6.3.0
-  uuid: ^3.0.7
+  uuid: ^4.0.0
   visibility_detector: ^0.4.0+2
   window_manager: ^0.4.2
   yaml: ^3.1.2
@@ -90,26 +86,29 @@ dev_dependencies:
   flutter_launcher_icons: "^0.14.1"
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  mockito: ^5.5.0
+  bloc_test: ^9.1.7
   msix: ^3.16.8
 
 dependency_overrides:
+  intl: 0.20.2
   device_info_plus: 11.3.3
   file: 7.0.1
-  meta: 1.15.0
+  meta: ^1.17.0
+  chalkdart: ^2.2.1
+  at_utils: ^3.0.15
   dartssh2:
     git:
       url: https://github.com/atsign-foundation/dartssh2
       ref: trunk
-  args:
-    git:
-      ref: gkc/show-aliases-in-usage
-      url: https://github.com/gkc/args
   at_onboarding_flutter:
     path: ../at_onboarding_flutter
   at_client_mobile:
     git:
       url: https://github.com/atsign-foundation/at_client_sdk
-      ref: 533f657eec18f13a11dafbf67c0006c6cc010dde
+      ref: 2ecfe7208c0a5520be21c99007c8d365dabb001a
       path: packages/at_client_mobile
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

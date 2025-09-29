@@ -17,16 +17,19 @@ class ProfileDeviceName extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: BlocSelector<ProfileBloc, ProfileState, (String, String)?>(
-              selector: (state) {
-            if (state is! ProfileLoadedState) return null;
-            return (state.profile.friendlyName, state.profile.sshnpdAtsign);
-          }, builder: (BuildContext context, (String, String)? tuple) {
-            if (tuple == null) return gap0;
-            var (friendlyName, sshnpdAtSign) = tuple;
-            return Tooltip(
+            selector: (state) {
+              if (state is! ProfileLoadedState) return null;
+              return (state.profile.friendlyName, state.profile.sshnpdAtsign);
+            },
+            builder: (BuildContext context, (String, String)? tuple) {
+              if (tuple == null) return gap0;
+              var (friendlyName, sshnpdAtSign) = tuple;
+              return Tooltip(
                 message: friendlyName,
-                child: Text(friendlyName, textAlign: TextAlign.center));
-          }),
+                child: Text(friendlyName, textAlign: TextAlign.center),
+              );
+            },
+          ),
         ),
       ),
     );

@@ -25,7 +25,11 @@ extension LanguageExtension on Language {
       case Language.portuguese:
         return const Locale('pt', 'BR');
       case Language.cantonese:
-        return const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK');
+        return const Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+          countryCode: 'HK',
+        );
       case Language.mandarin:
         return const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN');*/
   }
@@ -71,5 +75,6 @@ class LanguageUtil {
     return Language.english;
   }
 }
+
 //}
 //}

@@ -35,7 +35,18 @@
 
 #define LOGGER_TAG "sshnpd - loop"
 
+struct _notification_key_map notification_key_map[] = {
+    {"", NK_NONE},
+    {"sshpublickey", NK_SSHPUBLICKEY},
+    {"ping", NK_PING},
+    {"ssh_request", NK_SSH_REQUEST},
+    {"npt_request", NK_NPT_REQUEST},
+    {"graceful_shutdown", NK_GRACEFUL_SHUTDOWN},
+};
+
+atclient_authenticate_options worker_options;
 atclient worker;
+atclient_authenticate_options monitor_options;
 atclient monitor_ctx;
 char *ping_response;
 char *atserver_host;

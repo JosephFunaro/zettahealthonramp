@@ -21,61 +21,57 @@ class ProfileViewSshStyle extends StatelessWidget {
     final isAutoStart = profile?.startUpOption == "Automatic";
 
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      final columnWidth =
-          ProfileLayoutHelper.calculateColumnWidth(constraints.maxWidth);
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final columnWidth = ProfileLayoutHelper.calculateColumnWidth(
+          constraints.maxWidth,
+        );
 
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // First column (aligned center)
-          SizedBox(
-            width: columnWidth,
-            child: Center(
-              child: ProfileDeviceName(width: columnWidth),
-            ),
-          ),
-          const SizedBox(width: ProfileLayoutHelper.gapWidth),
-          // Second column (aligned center)
-          SizedBox(
-            width: columnWidth,
-            child: Center(
-              child: ProfileDisplayName(width: columnWidth),
-            ),
-          ),
-          const SizedBox(width: ProfileLayoutHelper.gapWidth),
-          // Third column (aligned center)
-          SizedBox(
-            width: columnWidth,
-            child: Center(
-              child: ProfileServiceView(width: columnWidth),
-            ),
-          ),
-          const SizedBox(width: ProfileLayoutHelper.gapWidth),
-          // Fourth column (aligned center)
-          SizedBox(
-            width: columnWidth,
-            child: Center(
-              child: isAutoStart
-                  ? AutoStartStatusMessage(width: columnWidth)
-                  : ProfileStatusIndicator(
-                      width: columnWidth, // Ensure consistent width
-                    ),
-            ),
-          ),
-          const SizedBox(width: ProfileLayoutHelper.gapWidth),
-          // Fifth column (aligned center)
-          if (!isAutoStart)
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // First column (aligned center)
             SizedBox(
               width: columnWidth,
-              child: const Center(
-                child: ProfileRunButton(), // Ensure the button is centered
+              child: Center(child: ProfileDeviceName(width: columnWidth)),
+            ),
+            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+            // Second column (aligned center)
+            SizedBox(
+              width: columnWidth,
+              child: Center(child: ProfileDisplayName(width: columnWidth)),
+            ),
+            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+            // Third column (aligned center)
+            SizedBox(
+              width: columnWidth,
+              child: Center(child: ProfileServiceView(width: columnWidth)),
+            ),
+            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+            // Fourth column (aligned center)
+            SizedBox(
+              width: columnWidth,
+              child: Center(
+                child: isAutoStart
+                    ? AutoStartStatusMessage(width: columnWidth)
+                    : ProfileStatusIndicator(
+                        width: columnWidth, // Ensure consistent width
+                      ),
               ),
             ),
-        ],
-      );
-    });
+            const SizedBox(width: ProfileLayoutHelper.gapWidth),
+            // Fifth column (aligned center)
+            if (!isAutoStart)
+              SizedBox(
+                width: columnWidth,
+                child: const Center(
+                  child: ProfileRunButton(), // Ensure the button is centered
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -89,7 +85,8 @@ class AutoStartStatusMessage extends StatelessWidget {
       width: width, // Use the same column width as other status messages
       child: const Padding(
         padding: EdgeInsets.symmetric(
-            vertical: 8.0), // Add consistent vertical padding
+          vertical: 8.0,
+        ), // Add consistent vertical padding
         child: StatusMessage(
           tooltip:
               "Endpoint set to automatically start. If you wish to control this Endpoint manually, please change the setting in the Endpoint Details.",

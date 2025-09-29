@@ -17,7 +17,12 @@ import 'package:uuid/uuid.dart';
 // If you've never seen an abstract implementation before, here it is :P
 @protected
 abstract class SshnpCore
-    with AsyncInitialization, AsyncDisposal, AtClientBindings, SshnpKeyHandler
+    with
+        AsyncInitialization,
+        AsyncDisposal,
+        AtClientBindings,
+        SshnpKeyHandler,
+        ApkamSigning
     implements Sshnp {
   // * AtClientBindings members
   /// The logger for this class
@@ -78,11 +83,21 @@ abstract class SshnpCore
     _progressStreamController.add(message);
   }
 
-  SshnpCore({
-    required this.atClient,
-    required this.params,
-    this.logStream,
-  })  : sessionId = Uuid().v4(),
+  /// the uri (e.g. public:foo.bar.baz@atsign) of the [publicSigningKey]
+  @override
+  String get publicSigningKeyUri;
+
+  /// the public key which can be used to verify signatures made using
+  /// [privateSigningKey]
+  @override
+  String get publicSigningKey;
+
+  /// the private key used to sign things this program sends
+  @override
+  String get privateSigningKey;
+
+  SshnpCore({required this.atClient, required this.params, this.logStream})
+      : sessionId = Uuid().v4(),
         namespace = '${params.device}.${DefaultArgs.namespace}',
         localPort = params.localPort {
     logger.level = params.verbose ? 'info' : 'shout';
@@ -118,11 +133,16 @@ abstract class SshnpCore
     if (params.sendSshPublicKey) {
       requiredFeatures.add(DaemonFeature.acceptsPublicKeys);
     }
+    if (params.relayAuthMode == RelayAuthMode.escr) {
+      requiredFeatures.add(DaemonFeature.supportsRamEscr);
+    }
     sendProgress('Sending daemon feature check request');
 
     Future<List<(DaemonFeature feature, bool supported, String reason)>>
-        featureCheckFuture = sshnpdChannel.featureCheck(requiredFeatures,
-            timeout: params.daemonPingTimeout);
+        featureCheckFuture = sshnpdChannel.featureCheck(
+      requiredFeatures,
+      timeout: params.daemonPingTimeout,
+    );
 
     /// Set the remote username to use for the ssh session
     sendProgress('Resolving remote username for user session');
@@ -131,13 +151,19 @@ abstract class SshnpCore
     /// Set the username to use for the initial ssh tunnel
     sendProgress('Resolving remote username for tunnel session');
     tunnelUsername = await sshnpdChannel.resolveTunnelUsername(
-        remoteUsername: remoteUsername);
+      remoteUsername: remoteUsername,
+    );
 
     /// Shares the public key if required
     if (params.sendSshPublicKey) {
       sendProgress('Sharing ssh public key');
     }
     await sshnpdChannel.sharePublicKeyIfRequired(identityKeyPair);
+
+    if (sshnpdChannel.cachedPingResponse != null) {
+      srvdChannel.cachedDaemonPublicSigningKeyUri =
+          sshnpdChannel.cachedPingResponse!['publicSigningKeyUri'];
+    }
 
     /// Retrieve the srvd host and port pair
     sendProgress('Fetching host and port from srvd');

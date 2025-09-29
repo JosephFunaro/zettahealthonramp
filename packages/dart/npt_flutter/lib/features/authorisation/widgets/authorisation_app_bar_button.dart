@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/authorisation/cubit/pending_requests_count_cubit.dart';
 import 'package:npt_flutter/home_wrapper_widget.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/routes.dart';
 //import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -13,6 +13,8 @@ class AuthorisationAppBarButton extends StatefulWidget {
   const AuthorisationAppBarButton({super.key});
 
   @override
+  AuthorisationAppBarButtonState createState() =>
+      AuthorisationAppBarButtonState();
   AuthorisationAppBarButtonState createState() =>
       AuthorisationAppBarButtonState();
 }
@@ -34,7 +36,11 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
         // so using this as a proxy
         if (visibilityInfo.visibleFraction > 0.9) {
           unawaited(
-              context.read<PendingRequestsCountCubit>().getPendingRequests());
+            context.read<PendingRequestsCountCubit>().getPendingRequests(),
+          );
+          unawaited(
+            context.read<PendingRequestsCountCubit>().getPendingRequests(),
+          );
         }
       },
       child: StreamBuilder(
@@ -50,10 +56,9 @@ class AuthorisationAppBarButtonState extends State<AuthorisationAppBarButton> {
                 icon: Badge.count(
                   count: authorisationNotificationCount.count,
                   isLabelVisible: authorisationNotificationCount.count > 0,
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   textColor: Theme.of(context).colorScheme.primary,
                   child: const Icon(Icons.key_outlined),
                 ),

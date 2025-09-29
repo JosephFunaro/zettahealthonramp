@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 
 import '../../../styles/sizes.dart';
 import '../../../widgets/custom_container.dart';
@@ -24,13 +24,9 @@ class DefaultRelaySection extends StatelessWidget {
           ],
         ),
         gapH16,
-        const CustomContainer.background(
-          child: SettingsRelayQuickButtons(),
-        ),
+        const CustomContainer.background(child: SettingsRelayQuickButtons()),
         gapH13,
-        const CustomContainer.background(
-          child: SettingsOverrideRelaySwitch(),
-        )
+        const CustomContainer.background(child: SettingsOverrideRelaySwitch()),
       ],
     );
   }

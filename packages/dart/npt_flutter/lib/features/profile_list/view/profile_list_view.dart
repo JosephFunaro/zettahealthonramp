@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:npt_flutter/app.dart';
-import 'package:npt_flutter/features/back_up_key/cubit/backup_key_cubit.dart';
-import 'package:npt_flutter/features/back_up_key/widgets/backup_key_alert_dialog.dart';
+import 'package:npt_flutter/features/back_up_key/util/backup_key_utils.dart';
 import 'package:npt_flutter/features/profile/profile.dart';
 import 'package:npt_flutter/features/profile/view/profile_header_view.dart';
 import 'package:npt_flutter/features/profile_list/profile_list.dart';
+import 'package:npt_flutter/features/profile_list/widgets/demo_profile_info_widget.dart';
 import 'package:npt_flutter/features/profile_list/widgets/profile_list_failed_load_content.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/styles/sizes.dart';
 import 'package:npt_flutter/widgets/spinner.dart';
 import '../../../widgets/custom_card.dart';
@@ -75,10 +74,10 @@ class _ProfileListViewState extends State<ProfileListView> {
           child: Text(
             "WARNING: This Endpoint has been deactivated as it has been suspected to be compromised. Please uninstall and reinstall this Endpoint.",
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -91,12 +90,10 @@ class _ProfileListViewState extends State<ProfileListView> {
           builder: (context, state) {
             return switch (state) {
               ProfileListInitial() ||
-              ProfileListLoading() =>
-                const Center(child: Spinner()),
+              ProfileListLoading() => const Center(child: Spinner()),
               ProfileListFailedLoad() => const ProfileListFailedLoadContent(),
-              ProfileListLoaded() =>
-                BlocBuilder<ProfileListBloc, ProfileListState>(
-                    builder: (BuildContext context, ProfileListState state) {
+              ProfileListLoaded() => BlocBuilder<ProfileListBloc, ProfileListState>(
+                builder: (BuildContext context, ProfileListState state) {
                   if (state is! ProfileListLoaded) {
                     return gap0;
                   }
@@ -113,7 +110,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             CustomCard.dashboardContent(
-                              height: deviceSize.height *
+                              height:
+                                  deviceSize.height *
                                   Sizes.dashboardCardHeightFactor,
                               width: SizeConfig.setDashboardWidth(),
                               child: Column(
@@ -135,18 +133,21 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   border: OutlineInputBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            8.0),
+                                                          8.0,
+                                                        ),
                                                   ),
-                                                  prefixIcon:
-                                                      const Icon(Icons.search),
+                                                  prefixIcon: const Icon(
+                                                    Icons.search,
+                                                  ),
                                                 ),
                                                 onChanged: (value) {
                                                   context
                                                       .read<ProfileListBloc>()
                                                       .add(
-                                                          ProfileListFilterEvent(
-                                                              filterText:
-                                                                  value));
+                                                        ProfileListFilterEvent(
+                                                          filterText: value,
+                                                        ),
+                                                      );
                                                 },
                                               ),
                                             ),
@@ -197,18 +198,21 @@ class _ProfileListViewState extends State<ProfileListView> {
                                                   border: OutlineInputBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            8.0),
+                                                          8.0,
+                                                        ),
                                                   ),
-                                                  prefixIcon:
-                                                      const Icon(Icons.search),
+                                                  prefixIcon: const Icon(
+                                                    Icons.search,
+                                                  ),
                                                 ),
                                                 onChanged: (value) {
                                                   context
                                                       .read<ProfileListBloc>()
                                                       .add(
-                                                          ProfileListFilterEvent(
-                                                              filterText:
-                                                                  value));
+                                                        ProfileListFilterEvent(
+                                                          filterText: value,
+                                                        ),
+                                                      );
                                                 },
                                               ),
                                             ),
@@ -258,9 +262,10 @@ class _ProfileListViewState extends State<ProfileListView> {
                                             itemBuilder: (context, index) {
                                               final cacheCubit = context
                                                   .read<ProfileCacheCubit>();
-                                              final profileBloc =
-                                                  cacheCubit.getProfileBloc(
-                                                      profiles[index]);
+                                              final profileBloc = cacheCubit
+                                                  .getProfileBloc(
+                                                    profiles[index],
+                                                  );
 
                                               return CustomCard.profile(
                                                 child: BlocProvider.value(
@@ -277,36 +282,40 @@ class _ProfileListViewState extends State<ProfileListView> {
                                             Align(
                                               alignment: Alignment.center,
                                               child: SvgPicture.asset(
-                                                  'assets/empty_state_profile_bg.svg'),
+                                                'assets/empty_state_profile_bg.svg',
+                                              ),
                                             ),
                                             Align(
                                               alignment: Alignment.bottomCenter,
                                               child: Text(
                                                 strings.emptyProfileMessage,
                                                 style: bodyMedium?.copyWith(
-                                                    fontSize: Sizes.p16),
+                                                  fontSize: Sizes.p16,
+                                                ),
                                                 textAlign: TextAlign.center,
                                               ),
                                             ),
                                           ],
                                         ),
                                   BlocBuilder<SyncCubit, bool>(
-                                      buildWhen: (previous, current) {
-                                    return previous != current;
-                                  }, builder: (context, state) {
-                                    if (state is ProfileListLoading) {
-                                      return Column(
-                                        children: [
-                                          isFullProfile ? gapH25 : gap0,
-                                          Text(
-                                            strings.syncInProgress,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      );
-                                    }
-                                    return gap0;
-                                  }),
+                                    buildWhen: (previous, current) {
+                                      return previous != current;
+                                    },
+                                    builder: (context, state) {
+                                      if (state is ProfileListLoading) {
+                                        return Column(
+                                          children: [
+                                            isFullProfile ? gapH25 : gap0,
+                                            Text(
+                                              strings.syncInProgress,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                      return gap0;
+                                    },
+                                  ),
                                   gapH25,
                                 ],
                               ),
@@ -316,7 +325,8 @@ class _ProfileListViewState extends State<ProfileListView> {
                       ),
                     ],
                   );
-                }),
+                },
+              ),
             };
           },
         ),
@@ -332,10 +342,9 @@ class _ProfileListViewState extends State<ProfileListView> {
                     const SizedBox(height: 16),
                     Text(
                       "Refreshing Profiles... Please wait...",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: Colors.white),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.white),
                     ),
                   ],
                 ),

@@ -19,23 +19,28 @@ class ProfileViewMinimal extends StatelessWidget {
     final isAutoStart = profile?.startUpOption == "Automatic";
 
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      final width = SizeConfig.setProfileFieldWidth();
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        ProfileDeviceName(width: width),
-        gapW10,
-        ProfileDisplayName(width: width),
-        gapW10,
-        ProfileServiceView(width: width),
-        gapW10,
-        if (isAutoStart)
-          AutoStartStatusMessage(width: width)
-        else
-          ProfileStatusIndicator(
-              width: SizeConfig.setProfileFieldWidth(statusField: true)),
-        gapW10,
-        if (!isAutoStart) const Flexible(child: ProfileRunButton()),
-      ]);
-    });
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final width = SizeConfig.setProfileFieldWidth();
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ProfileDeviceName(width: width),
+            gapW10,
+            ProfileDisplayName(width: width),
+            gapW10,
+            ProfileServiceView(width: width),
+            gapW10,
+            if (isAutoStart)
+              AutoStartStatusMessage(width: width)
+            else
+              ProfileStatusIndicator(
+                width: SizeConfig.setProfileFieldWidth(statusField: true),
+              ),
+            gapW10,
+            if (!isAutoStart) const Flexible(child: ProfileRunButton()),
+          ],
+        );
+      },
+    );
   }
 }

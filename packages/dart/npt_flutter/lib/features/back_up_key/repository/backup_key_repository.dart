@@ -12,10 +12,15 @@ class BackUpKeyRepository {
   bool _fromJson(Map<String, dynamic> json) => json['status'];
   Map<String, dynamic> _toJson(bool status) => {'status': status};
 
+  /// This method is used to get the backup key status from the atClient.
+  /// If it is already backed up or if there is an error, it returns true, if not, it returns false.
   Future<bool> getBackupKeyStatus() async {
     AtClient atClient = AtClientManager.getInstance().atClient;
     String? atSign = atClient.getCurrentAtSign();
-    var key = AtKey.self('key_backup.app_metadata', namespace: Constants.namespace);
+    var key = AtKey.self(
+      'key_backup.app_metadata',
+      namespace: Constants.namespace,
+    );
     if (atSign != null) key.sharedBy(atSign);
 
     try {
@@ -28,6 +33,7 @@ class BackUpKeyRepository {
     }
   }
 
+  /// This method is used to update the backup key status in the atClient.
   Future<bool> putBackupKeyStatus(bool status) async {
     AtClient atClient = AtClientManager.getInstance().atClient;
     String? atSign = atClient.getCurrentAtSign();
@@ -45,6 +51,7 @@ class BackUpKeyRepository {
     }
   }
 
+  /// This method is used to save the atKeys to a file.
   Future<bool> saveAtKeysToPath({
     required Uint8List data,
     required String dialogTitle,

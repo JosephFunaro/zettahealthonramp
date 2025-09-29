@@ -24,7 +24,9 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
   void clearAll() => emit(const ProfileListInitial());
 
   Future<void> _onLoad(
-      ProfileListLoadEvent event, Emitter<ProfileListState> emit) async {
+    ProfileListLoadEvent event,
+    Emitter<ProfileListState> emit,
+  ) async {
     emit(const ProfileListLoading());
 
     // Fetch the full profile objects
@@ -34,30 +36,38 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     _allProfiles.addAll(profileList);
 
     // Emit the loaded state with all profiles
-    emit(ProfileListLoaded(
-        profiles: _allProfiles.map((profile) => profile.uuid)));
+    emit(
+      ProfileListLoaded(profiles: _allProfiles.map((profile) => profile.uuid)),
+    );
   }
 
   Future<void> _onUpdate(
-      ProfileListUpdateEvent event, Emitter<ProfileListState> emit) async {
+    ProfileListUpdateEvent event,
+    Emitter<ProfileListState> emit,
+  ) async {
     emit(ProfileListLoaded(profiles: event.profiles));
   }
 
   Future<void> _onDelete(
-      ProfileListDeleteEvent event, Emitter<ProfileListState> emit) async {
+    ProfileListDeleteEvent event,
+    Emitter<ProfileListState> emit,
+  ) async {
     if (state is! ProfileListLoaded) return;
     final profiles = (state as ProfileListLoaded).profiles;
 
     for (final profile in profiles) {
-      unawaited(_repo.deleteProfile(
-          profile)); // or just profile if your method accepts full object
+      unawaited(
+        _repo.deleteProfile(profile),
+      ); // or just profile if your method accepts full object
     }
 
     emit(const ProfileListLoaded(profiles: [])); // Clear the list
   }
 
   Future<void> _onAdd(
-      ProfileListAddEvent event, Emitter<ProfileListState> emit) async {
+    ProfileListAddEvent event,
+    Emitter<ProfileListState> emit,
+  ) async {
     // Clear the existing profiles
     _allProfiles.clear();
 
@@ -69,8 +79,9 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
     }
 
     // Emit the updated state with all profiles
-    emit(ProfileListLoaded(
-        profiles: _allProfiles.map((profile) => profile.uuid)));
+    emit(
+      ProfileListLoaded(profiles: _allProfiles.map((profile) => profile.uuid)),
+    );
   }
 
   void _onFilter(ProfileListFilterEvent event, Emitter<ProfileListState> emit) {
@@ -78,8 +89,11 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
 
     // If the filter text is empty, show all profiles
     if (filterText.isEmpty) {
-      emit(ProfileListLoaded(
-          profiles: _allProfiles.map((profile) => profile.uuid)));
+      emit(
+        ProfileListLoaded(
+          profiles: _allProfiles.map((profile) => profile.uuid),
+        ),
+      );
       return;
     }
 
@@ -89,8 +103,11 @@ class ProfileListBloc extends LoggingBloc<ProfileListEvent, ProfileListState> {
           profile.displayName.toLowerCase().contains(filterText);
     }).toList();
 
-    emit(ProfileListLoaded(
-        profiles: filteredProfiles.map((profile) => profile.uuid)));
+    emit(
+      ProfileListLoaded(
+        profiles: filteredProfiles.map((profile) => profile.uuid),
+      ),
+    );
   }
 
   Future<List<Profile>> _fetchProfiles() async {

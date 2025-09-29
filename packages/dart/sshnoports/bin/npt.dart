@@ -92,7 +92,8 @@ void main(List<String> args) async {
         aliases: ['lp'],
         abbr: 'l',
         help: 'client-side local port for the socket tunnel.'
-            ' If not supplied, we will ask the o/s for a spare port',
+            ' If not supplied, we will ask the o/s for a spare port.'
+            ' Alias: --lp',
         defaultsTo: '0',
       );
       parser.addOption(
@@ -100,14 +101,16 @@ void main(List<String> args) async {
         abbr: 'p',
         aliases: ['rp'],
         mandatory: true,
-        help: 'The remote port required',
+        help: 'The remote port required.'
+            ' Alias: --rp',
       );
       parser.addOption(
         'remote-host',
         abbr: 'h',
         aliases: ['rh'],
         defaultsTo: 'localhost',
-        help: 'The remote host required',
+        help: 'The remote host required'
+            ' Alias: --rh',
       );
       parser.addOption(
         'key-file',
@@ -115,13 +118,16 @@ void main(List<String> args) async {
         mandatory: false,
         aliases: const ['keyFile'],
         help:
-            'Path to this client\'s atSign\'s keyFile, if not in ~/.atsign/keys/',
+            'Path to this client\'s atSign\'s keyFile, if not in ~/.atsign/keys/ '
+            ' Alias: --keyFile',
       );
       parser.addOption(
-        'root-domain',
+        'root-server',
+        aliases: const ['root-domain'],
         mandatory: false,
         defaultsTo: 'root.atsign.org',
-        help: 'atDirectory domain',
+        help: 'atDirectory domain.'
+            ' Alias (for backwards compatibility): --root-domain',
       );
       parser.addOption(
         'daemon-ping-timeout',
@@ -129,7 +135,8 @@ void main(List<String> args) async {
         mandatory: false,
         defaultsTo: DefaultArgs.daemonPingTimeoutSeconds.toString(),
         help: 'Seconds the client should wait for response'
-            ' after pinging a daemon',
+            ' after pinging a daemon.'
+            ' Alias: --dpt',
       );
       parser.addFlag(
         'per-session-storage',
@@ -140,7 +147,8 @@ void main(List<String> args) async {
             ' Defaults to true, enabling you to run multiple local clients'
             ' concurrently. However: if you wish to run just one client at a'
             ' time, then you will get a performance boost if you negate this'
-            ' flag.',
+            ' flag.'
+            ' Alias: --pss',
       );
       parser.addFlag(
         'verbose',
@@ -201,14 +209,45 @@ void main(List<String> args) async {
             ' it has started its session.',
       );
 
+      parser.addOption(
+        'heartbeat',
+        abbr: 'H',
+        mandatory: false,
+        defaultsTo: '${DefaultArgs.controlChannelHeartbeatIntervalMins}m',
+        help: 'How frequently to send heartbeats on the connection\'s'
+            ' control channel. Heartbeats are an attempt to persuade zealous'
+            ' network intermediaries that the control channel shouldn\'t be'
+            ' closed due to lack of activity. Heartbeats will not be sent'
+            ' to older daemons which do not support them.'
+            ' Argument must be supplied in human readable'
+            ' form e.g. as follows: "30s" or "1h" or "1h,14m,30s"'
+            ' or "7d".',
+      );
+
       parser.addFlag(
         'encrypt-rvd-traffic',
         aliases: ['et'],
         help: 'When true, traffic via the socket rendezvous is encrypted,'
             ' in addition to whatever encryption the traffic already has'
-            ' (e.g. an ssh session)',
+            ' (e.g. an ssh session).'
+            ' Alias: --et',
         defaultsTo: DefaultArgs.encryptRvdTraffic,
         negatable: true,
+      );
+
+      parser.addOption(
+        'relay-auth-mode',
+        aliases: ['ram'],
+        help: 'The authentication mode to use. "ecr" is strongest.'
+            ' Alias: --ram',
+        allowed: RelayAuthMode.values.map((c) => c.name).toList(),
+        defaultsTo: RelayAuthMode.payload.name,
+      );
+
+      parser.addFlag(
+        '443',
+        help: 'When true, asks the relay to use port 443 for this session',
+        defaultsTo: false,
       );
 
       // Parse Args
@@ -234,7 +273,7 @@ void main(List<String> args) async {
       int remotePort = int.parse(parsedArgs['remote-port']);
       String remoteHost = parsedArgs['remote-host'];
       String device = parsedArgs['device'];
-      String rootDomain = parsedArgs['root-domain'];
+      String rootDomain = parsedArgs['root-server'] ?? 'root.atsign.org';
       perSessionStorage = parsedArgs['per-session-storage'];
       int localPort = int.parse(parsedArgs['local-port']);
       bool inline = !parsedArgs['exit-when-connected'];
@@ -324,6 +363,7 @@ void main(List<String> args) async {
             ' setting timeout to $keepAliveDefaultTimeoutHours hours');
         timeoutArg = '${keepAliveDefaultTimeoutHours}h';
       }
+
       NptParams params = NptParams(
         clientAtSign: clientAtSign,
         sshnpdAtSign: daemonAtSign,
@@ -333,12 +373,16 @@ void main(List<String> args) async {
         device: device,
         localPort: localPort,
         verbose: verbose,
-        rootDomain: parsedArgs['root-domain'],
+        rootDomain: rootDomain,
         inline: inline,
         daemonPingTimeout:
             Duration(seconds: int.parse(parsedArgs['daemon-ping-timeout'])),
         encryptRvdTraffic: parsedArgs['encrypt-rvd-traffic'],
+        relayAuthMode:
+            RelayAuthMode.values.byName(parsedArgs['relay-auth-mode']),
         timeout: parseDuration(timeoutArg),
+        controlChannelHeartbeat: parseDuration(parsedArgs['heartbeat']),
+        only443: parsedArgs['443'],
       );
 
       while (true) {

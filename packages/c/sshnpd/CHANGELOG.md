@@ -1,3 +1,53 @@
+## 1.0.16
+
+- build(deps): Bump at_c to use cJSON 1.7.19
+
+## 1.0.15
+
+- feat: Add SBOM using Conan lock file
+
+## 1.0.14
+
+- build(deps): Bump at_c to use MbedTLS 3.6.4
+
+## 1.0.13
+
+- feat: csshnpd root-domain implementation
+
+## 1.0.12
+
+- fix: convert device name to lower case to comply with Dart
+- build(deps): Bump at_c to support cjson patch
+
+## 1.0.11
+
+- build(deps): Bump to at_c 0.4.3 to get mbedtls 3.6.3.1
+
+## 1.0.10
+
+- fix: CMake search paths for cross compile
+
+## 1.0.9
+
+- feat: add support for linking against shared third party dependencies
+
+## 1.0.8
+
+- fix: version number in version.h
+
+## 1.0.7
+
+- fix: switch statement fallthrough warning
+
+## 1.0.6
+
+- fix: more build warnings for openwrt upstream
+
+## 1.0.5
+
+- chore: stricter compile options to match openwrt upstream
+- fix: build warnings for openwrt upstream
+
 ## 1.0.4
 
 - chore: change source packaging format

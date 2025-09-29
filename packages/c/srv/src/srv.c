@@ -89,7 +89,7 @@ int run_srv_daemon_side_multi(srv_params_t *params) {
     }
   }
 
-  // Open a control socket of type B (non local host and port)
+  // Open a control channel of type B (non local host and port)
   // This socket will decrypt the messages comming from the other side
   // which provide the information to create new sockets
   side_t control_side;
@@ -187,7 +187,7 @@ int run_srv_daemon_side_multi(srv_params_t *params) {
           goto exit;
         }
         atlogger_log(TAG, ATLOGGER_LOGGING_LEVEL_DEBUG,
-                     "run_srv_daemon_side_multi\n Control socket received %s request - \n creating new socketToSocket "
+                     "run_srv_daemon_side_multi\n control channel received %s request - \n creating new socketToSocket "
                      "connection\n",
                      messagetype);
 
@@ -237,7 +237,7 @@ int run_srv_daemon_side_multi(srv_params_t *params) {
         pthread_detach(sts_thread);
 
       } else {
-        atlogger_log(TAG, ATLOGGER_LOGGING_LEVEL_DEBUG, "Unknown request to control socket: %s\n", requests[i]);
+        atlogger_log(TAG, ATLOGGER_LOGGING_LEVEL_DEBUG, "Unknown request to control channel: %s\n", requests[i]);
       }
     }
     // Clean buffer for next iteration and free previous requests
@@ -370,13 +370,14 @@ exit:
   return 0;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
 int server_to_socket(const srv_params_t *params, const char *auth_string, chunked_transformer_t *encrypter,
                      chunked_transformer_t *decrypter) {
-  return 0;
+  (void)params;
+  (void)auth_string;
+  (void)encrypter;
+  (void)decrypter;
+  return 1;
 }
-#pragma clang diagnostic pop
 
 int create_encrypter_and_decrypter(const char *session_aes_key_string, const char *session_aes_iv_string,
                                    chunked_transformer_t *encrypter, chunked_transformer_t *decrypter) {

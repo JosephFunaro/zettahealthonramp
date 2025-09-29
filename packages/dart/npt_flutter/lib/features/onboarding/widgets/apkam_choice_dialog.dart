@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/onboarding/widgets/enrollment_dialog.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/styles/sizes.dart';
 
-enum APKAMFlow {
-  atKeys,
-  apkam,
-}
+enum APKAMFlow { atKeys, apkam }
 
 class ApkamChoiceDialog extends StatelessWidget {
   const ApkamChoiceDialog({super.key});
@@ -23,10 +20,12 @@ class ApkamChoiceDialog extends StatelessWidget {
         children: [
           Text(
             strings.authenticate,
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(color: Colors.black),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: Colors.black),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: Colors.black),
           ),
           /*gapH4,
           Text(
@@ -49,8 +48,8 @@ class ApkamChoiceDialog extends StatelessWidget {
                       Text(
                         strings.uploadKey,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).primaryColor,
-                            ),
+                          color: Theme.of(context).primaryColor,
+                        ),
                       ),
                       Text(
                         strings.uploadKeyDescription,
@@ -64,13 +63,17 @@ class ApkamChoiceDialog extends StatelessWidget {
                   width: _kButtonWidth,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      textStyle: const TextStyle(
-                        fontSize: Sizes.p18,
-                      ),
+                      textStyle: const TextStyle(fontSize: Sizes.p18),
                       foregroundColor: Theme.of(context).primaryColor,
                       side: BorderSide(color: Theme.of(context).primaryColor),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: Sizes.p32, vertical: Sizes.p20),
+                        horizontal: Sizes.p32,
+                        vertical: Sizes.p20,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Sizes.p32,
+                        vertical: Sizes.p20,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(Sizes.p8),
                       ),
@@ -80,7 +83,7 @@ class ApkamChoiceDialog extends StatelessWidget {
                     },
                     child: Text(strings.selectKey),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -100,8 +103,8 @@ class ApkamChoiceDialog extends StatelessWidget {
                       Text(
                         strings.enrollWithAuthenticator,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Theme.of(context).primaryColor,
-                            ),
+                          color: Theme.of(context).primaryColor,
+                        ),
                       ),
                       Text(
                         strings.enrollWithAuthenticatorDescription,
@@ -115,10 +118,11 @@ class ApkamChoiceDialog extends StatelessWidget {
                   width: _kButtonWidth,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      textStyle: const TextStyle(
-                        fontSize: Sizes.p18,
+                      textStyle: const TextStyle(fontSize: Sizes.p18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Sizes.p32,
+                        vertical: Sizes.p20,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: Sizes.p32, vertical: Sizes.p20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(Sizes.p8),
                       ),
@@ -128,7 +132,7 @@ class ApkamChoiceDialog extends StatelessWidget {
                     },
                     child: Text(strings.enroll),
                   ),
-                )
+                ),
               ],
             ),
           ),*/

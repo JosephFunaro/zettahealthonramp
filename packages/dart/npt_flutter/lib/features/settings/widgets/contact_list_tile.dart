@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 
 import '../../../styles/app_color.dart';
 import '../../../styles/sizes.dart';
@@ -40,13 +40,28 @@ class ContactListTile extends StatelessWidget {
                       style: bodySmall.copyWith(fontSize: 8.toFont),
                     )),
               ),
-            );
-          } else {
-            return ListTile(
-              title: Text(strings.noName),
-              subtitle: Text(strings.noAtsign),
-            );
-          }
-        }));
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: Sizes.p30,
+                ),
+                dense: true,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(Sizes.p8.toFont),
+                ),
+                title: Text(
+                  contactRepo.atClientManager.atClient.getCurrentAtSign() ?? '',
+                  style: bodySmall.copyWith(fontSize: 8.toFont),
+                ),
+              ),
+            ),
+          );
+        } else {
+          return ListTile(
+            title: Text(strings.noName),
+            subtitle: Text(strings.noAtsign),
+          );
+        }
+      }),
+    );
   }
 }

@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "5.0.3",
-    "svelte": "5.28.2",
-    "vite": "6.3.5"
+    "@sveltejs/vite-plugin-svelte": "6.2.0",
+    "svelte": "5.39.2",
+    "vite": "7.1.5"
   },
   "overrides": {
     "vite": {
@@ -19,7 +19,7 @@
     }
   },
   "engines": {
-    "node": ">=v20.15.0 <23",
-    "npm": ">=10.8.2"
+    "node": ">=24.2.0",
+    "npm": ">=11.3.0"
   }
 }

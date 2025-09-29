@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:npt_flutter/features/profile/profile.dart';
+import 'package:npt_flutter/localization/app_localizations.dart';
 import 'package:npt_flutter/styles/sizes.dart';
 import 'package:npt_flutter/util/form_validator.dart';
 
@@ -9,10 +9,12 @@ class ProfileDeviceAtSignTextField extends StatefulWidget {
   const ProfileDeviceAtSignTextField({super.key});
 
   @override
-  State<ProfileDeviceAtSignTextField> createState() => _ProfileDeviceAtSignTextFieldState();
+  State<ProfileDeviceAtSignTextField> createState() =>
+      _ProfileDeviceAtSignTextFieldState();
 }
 
-class _ProfileDeviceAtSignTextFieldState extends State<ProfileDeviceAtSignTextField> {
+class _ProfileDeviceAtSignTextFieldState
+    extends State<ProfileDeviceAtSignTextField> {
   final TextEditingController controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -36,28 +38,36 @@ class _ProfileDeviceAtSignTextFieldState extends State<ProfileDeviceAtSignTextFi
           },
           builder: (BuildContext context, String? state) {
             if (state == null) return gap0;
-            Future.microtask(() => controller.value =
-                TextEditingValue(text: state, selection: TextSelection.collapsed(offset: state.length)));
+            Future.microtask(
+              () => controller.value = TextEditingValue(
+                text: state,
+                selection: TextSelection.collapsed(offset: state.length),
+              ),
+            );
             return SizedBox(
               width: Sizes.p300,
               height: Sizes.p80,
               child: TextFormField(
-                  controller: controller,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: FormValidator.validateRequiredAtsignField,
-                  onChanged: (value) {
-                    if (!value.startsWith('@')) {
-                      value = '@$value';
-                    }
-                    setState(() {
-                      value = value.trim();
-                    });
+                controller: controller,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: FormValidator.validateRequiredAtsignField,
+                onChanged: (value) {
+                  if (!value.startsWith('@')) {
+                    value = '@$value';
+                  }
+                  setState(() {
+                    value = value.trim();
+                  });
 
-                    var bloc = context.read<ProfileBloc>();
-                    bloc.add(ProfileEditEvent(
-                      profile: (bloc.state as ProfileLoadedState).profile.copyWith(sshnpdAtsign: value),
-                    ));
-                  }),
+                  var bloc = context.read<ProfileBloc>();
+                  bloc.add(
+                    ProfileEditEvent(
+                      profile: (bloc.state as ProfileLoadedState).profile
+                          .copyWith(sshnpdAtsign: value),
+                    ),
+                  );
+                },
+              ),
             );
           },
         ),

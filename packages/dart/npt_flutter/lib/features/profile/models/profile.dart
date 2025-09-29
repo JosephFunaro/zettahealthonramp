@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:noports_core/npt.dart';
+import 'package:noports_core/sshnp.dart';
 import 'package:npt_flutter/app.dart';
 import 'package:npt_flutter/features/favorite/favorite.dart';
 import 'package:npt_flutter/util/uuid.dart';
@@ -83,15 +83,17 @@ final class Profile extends Loggable with Favoritable {
 
   @override
   List<Object?> get props => [
-        uuid,
-        displayName,
-        relayAtsign,
-        sshnpdAtsign,
-        deviceName,
-        remoteHost,
-        remotePort,
-        localPort,
-      ];
+    uuid,
+    displayName,
+    relayAtsign,
+    sshnpdAtsign,
+    deviceName,
+    remoteHost,
+    remotePort,
+    localPort,
+    only443,
+    keepAlive,
+  ];
 
   @override
   bool get stringify => true;
@@ -117,11 +119,14 @@ final class Profile extends Loggable with Favoritable {
       device: deviceName,
       localPort: localPort,
       rootDomain: rootDomain,
+      only443: only443,
+      // When using 443, we must use ESCR relay auth mode
+      relayAuthMode: only443 ? RelayAuthMode.escr : RelayAuthMode.payload,
 
       // hardcoded for now, because it makes the app simpler
       // and there's very few use-cases where you wouldn't want these settings
       inline: true,
-      timeout: const Duration(days: 1),
+      timeout: keepAlive ? const Duration(hours: 24) : const Duration(hours: 1),
     );
   }
 
